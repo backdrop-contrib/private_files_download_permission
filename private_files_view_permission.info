@@ -1,0 +1,5 @@
+name = Private Files View Permission
+description = A simple permission to allow viewing of private files by role
+core = 7.x
+version = "7.x-1.0"
+files[] = private_files_view_permission.module

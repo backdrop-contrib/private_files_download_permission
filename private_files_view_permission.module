@@ -1,0 +1,32 @@
+<?php
+
+/*
+ * Copyright (c) 2011 by Marco Zanon
+ * Released under GPLv2 license
+ *
+ * Idea and code partially inspired by http://www.beacon9.ca/labs/drupal-7-private-files-module
+ */
+
+    /**
+     * Implementation of hook_permission().
+     */
+    function private_files_permission() {
+        return array(
+            'view all private files' => array(
+                'title' => t('View all private files'), 
+                'description' => t('View all files that are in private folders'),
+            ),
+        );
+    }
+
+    /**
+     * Implementation of hook_file_download().
+     */
+    function private_files_file_download($uri) {
+        if (!user_access('view all private files')) {
+            return -1;
+        }
+        return array('Content-Type' => file_get_mimetype($uri));
+    }
+
+?>
