@@ -62,7 +62,7 @@
      */
     function private_files_download_permission_file_download($uri) {
         $path = explode('/', $uri);
-        if ((0 !== strpos($path[2], variable_get('private_files_download_permission_unprotected_subfolder'))) && (!user_access('download private files'))) {
+        if ((0 !== strpos($path[2], variable_get('private_files_download_permission_unprotected_subfolder') . '/')) && (!user_access('download private files'))) {
             return -1;
         }
         return array('Content-Type' => file_get_mimetype($uri));
