@@ -10,7 +10,7 @@
     /**
      * Implementation of hook_permission().
      */
-    function private_files_permission() {
+    function private_files_view_permission_permission() {
         return array(
             'view all private files' => array(
                 'title' => t('View all private files'), 
@@ -22,7 +22,7 @@
     /**
      * Implementation of hook_file_download().
      */
-    function private_files_file_download($uri) {
+    function private_files_view_permission_file_download($uri) {
         if (!user_access('view all private files')) {
             return -1;
         }
