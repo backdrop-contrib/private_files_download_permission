@@ -1,6 +1,5 @@
 name = Private files download permission
 description = A simple permission to allow downloading of private files by role, plus the ability to combine both public and private downloads.
 core = 7.x
-version = "7.x-1.1"
 files[] = private_files_download_permission.module
 package = Access control
