@@ -1,9 +1,11 @@
 <?php
 
-/*
+/**
+ * @file
+ * Handles both module settings and its behaviour.
+ *
  * Copyright (c) 2011 by Marco Zanon (http://www.marcozanon.com)
  * Released under GPLv2 license
- *
  * Idea and code inspired by http://www.beacon9.ca/labs/drupal-7-private-files-module
  */
 
@@ -39,7 +41,7 @@ function private_files_download_permission_menu() {
 }
 
 /**
- * Implements hook_settings (setup of system_settings_form()).
+ * Form callback (configuration).
  */
 function private_files_download_permission_settings($form, $form_state) {
   if ('public' == file_default_scheme()) {
@@ -47,11 +49,11 @@ function private_files_download_permission_settings($form, $form_state) {
   }
   else {
     $form['private_files_download_permission_unprotected_subfolder'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Unprotected subfolder'),
-    '#default_value' => variable_get('private_files_download_permission_unprotected_subfolder'),
-    '#size' => '60',
-    '#description' => t('Use a relative path and don\'t add a trailing slash.') . ' ' . t('Caution: private downloads filters will be bypassed for the above subfolder (making it "public")!'),
+      '#type' => 'textfield',
+      '#title' => t('Unprotected subfolder'),
+      '#default_value' => variable_get('private_files_download_permission_unprotected_subfolder'),
+      '#size' => '60',
+      '#description' => t('Use a relative path and don\'t add a trailing slash.') . ' ' . t('Caution: private downloads filters will be bypassed for the above subfolder (making it "public")!'),
     );
   }
   return system_settings_form($form);
@@ -62,8 +64,8 @@ function private_files_download_permission_settings($form, $form_state) {
  */
 function private_files_download_permission_file_download($uri) {
   $path = explode('/', $uri);
-  if (($path[2] !== variable_get('private_files_download_permission_unprotected_subfolder')) && (!user_access('download private files'))) {
-    return drupal_access_denied();
+  if (($path[2] === variable_get('private_files_download_permission_unprotected_subfolder')) || (user_access('download private files'))) {
+    return array('Content-Type' => file_get_mimetype($uri));
   }
-  return array('Content-Type' => file_get_mimetype($uri));
+  return drupal_access_denied();
 }
