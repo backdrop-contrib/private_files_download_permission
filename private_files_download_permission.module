@@ -15,11 +15,11 @@
 function private_files_download_permission_permission() {
   return array(
     'download private files' => array(
-      'title' => t('Download private files'), 
+      'title' => t('Download private files'),
       'description' => t('Download files that are in private folders.'),
     ),
     'administer private files download permission' => array(
-      'title' => t('Administer Private files download permission'), 
+      'title' => t('Administer Private files download permission'),
       'description' => t('Access module configuration.'),
     ),
   );
@@ -67,5 +67,6 @@ function private_files_download_permission_file_download($uri) {
   if (($path[2] === variable_get('private_files_download_permission_unprotected_subfolder')) || (user_access('download private files'))) {
     return array('Content-Type' => file_get_mimetype($uri));
   }
+  // The following line should return -1, but see bug https://drupal.org/node/1281944.
   return drupal_access_denied();
 }
