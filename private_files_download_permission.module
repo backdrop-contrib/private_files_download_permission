@@ -53,7 +53,7 @@ function private_files_download_permission_settings($form, $form_state) {
       '#title' => t('Unprotected subfolder'),
       '#default_value' => variable_get('private_files_download_permission_unprotected_subfolder'),
       '#size' => '60',
-      '#description' => t('Use a relative path and don\'t add a trailing slash.') . ' ' . t('Caution: private downloads filters will be bypassed for the above subfolder (making it "public")!'),
+      '#description' => t('Use a relative path and don\'t add leading or trailing slashes. Caution: private downloads filters will be bypassed for the above subfolder (making it "public")!'),
     );
   }
   return system_settings_form($form);
