@@ -65,9 +65,9 @@ function private_files_download_permission_settings($form, &$form_state) {
 function private_files_download_permission_settings_validate($form, &$form_state) {
   // Make sure the unprotected subfolder variable does not use leading or trailing slashes.
   $unprotected_subfolder = $form_state['values']['private_files_download_permission_unprotected_subfolder'];
-  if (0 < strlen($unprotected_subfolder)) {
-    $first_char = substr($unprotected_subfolder, 0, 1);
-    $last_char = substr($unprotected_subfolder, -1, 1);
+  if (0 < drupal_strlen($unprotected_subfolder)) {
+    $first_char = drupal_substr($unprotected_subfolder, 0, 1);
+    $last_char = drupal_substr($unprotected_subfolder, -1, 1);
     if (('/' == $first_char) || ('\\' == $first_char)) {
       form_set_error('private_files_download_permission_unprotected_subfolder', t('You cannot use leading slashes.'));
     }
