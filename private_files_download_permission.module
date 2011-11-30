@@ -47,15 +47,13 @@ function private_files_download_permission_settings($form, &$form_state) {
   if ('public' == file_default_scheme()) {
     drupal_set_message(t('You need to enable the private file system before you setup this module.'), 'error');
   }
-  else {
-    $form['private_files_download_permission_unprotected_subfolder'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Unprotected subfolder'),
-      '#default_value' => variable_get('private_files_download_permission_unprotected_subfolder'),
-      '#size' => '60',
-      '#description' => t('Use a relative path and don\'t add leading or trailing slashes. Caution: private downloads filters will be bypassed for the above subfolder (making it "public")!'),
-    );
-  }
+  $form['private_files_download_permission_unprotected_subfolder'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Unprotected subfolder'),
+    '#default_value' => variable_get('private_files_download_permission_unprotected_subfolder'),
+    '#size' => '60',
+    '#description' => t('Use a relative path and don\'t add leading or trailing slashes. Caution: private downloads filters will be bypassed for the above subfolder (making it "public")!'),
+  );
   return system_settings_form($form);
 }
 
