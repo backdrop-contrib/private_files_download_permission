@@ -4,7 +4,7 @@
  * @file
  * Handles both module settings and its behaviour.
  *
- * Copyright (c) 2011 by Marco Zanon (http://www.marcozanon.com)
+ * Copyright (c) 2011-2012 by Marco Zanon (http://www.marcozanon.com)
  * Released under GPLv2 license
  * Idea and code inspired by http://www.beacon9.ca/labs/drupal-7-private-files-module
  */
@@ -83,6 +83,5 @@ function private_files_download_permission_file_download($uri) {
   if (($path[2] === variable_get('private_files_download_permission_unprotected_subfolder')) || (user_access('download private files'))) {
     return array('Content-Type' => file_get_mimetype($uri));
   }
-  // The following line should return -1, but see bug https://drupal.org/node/1281944.
-  return drupal_access_denied();
+  return -1;
 }
