@@ -14,10 +14,6 @@
  */
 function private_files_download_permission_permission() {
   return array(
-    'download private files' => array(
-      'title' => t('Download private files'),
-      'description' => t('Download files that are in private folders.'),
-    ),
     'administer private files download permission' => array(
       'title' => t('Administer Private files download permission'),
       'description' => t('Access module configuration.'),

@@ -10,20 +10,141 @@
  */
 
 /**
- * Implements hook_disable().
+ * Implements hook_schema().
  */
-function private_files_download_permission_disable() {
+function private_files_download_permission_schema() {
+  $schema['private_files_download_permission_directory'] = array(
+    'description'  => 'Directories whose permissions are set.',
+    'fields'       => array(
+      'did'  => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+      'path' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+    ),
+    'primary key'  => array('did'),
+    'foreign keys' => array(),
+    'unique keys'  => array(
+      'path' => array('path'),
+    ),
+    'indexes'      => array(),
+  );
+  $schema['private_files_download_permission_directory_role'] = array(
+    'description'  => 'Roles having per-directory download permission.',
+    'fields'       => array(
+      'drid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+      'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+      'rid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+    ),
+    'primary key'  => array('drid'),
+    'foreign keys' => array(
+      'private_files_download_permission_directory' => array(
+        'table'   => 'private_files_download_permission',
+        'columns' => array('did' => 'did'),
+      ),
+      'private_files_download_permission_directory_role' => array(
+        'table'   => 'role',
+        'columns' => array('rid' => 'rid'),
+      ),
+    ),
+    'unique keys'  => array(),
+    'indexes'      => array(),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function private_files_download_permission_install() {
+  // Add "real" foreign keys.
+  db_query('ALTER TABLE {private_files_download_permission_directory_role}
+            ADD CONSTRAINT {private_files_download_permission_directory}
+            FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE');
+  db_query('ALTER TABLE {private_files_download_permission_directory_role}
+            ADD CONSTRAINT {private_files_download_permission_directory_role}
+            FOREIGN KEY (rid) REFERENCES {role} (rid)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE');
+}
+
+/**
+ * Remove useless settings from version 1.x, implement new schema and add
+ * "real" foreign keys.
+ */
+function private_files_download_permission_update_7200() {
+  // Remove useless settings from version 1.x.
   foreach (user_roles() as $rid => $role_name) {
     user_role_revoke_permissions($rid, array(
       'download private files',
-      'administer private files download permission'
     ));
   }
+  variable_del('private_files_download_permission_unprotected_subfolder');
+  // Implement new schema (rewritten from scratch, see https://drupal.org/node/150220).
+  $schema['private_files_download_permission_directory'] = array(
+    'description'  => 'Directories whose permissions are set.',
+    'fields'       => array(
+      'did'  => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+      'path' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+    ),
+    'primary key'  => array('did'),
+    'foreign keys' => array(),
+    'unique keys'  => array(
+      'path' => array('path'),
+    ),
+    'indexes'      => array(),
+  );
+  $schema['private_files_download_permission_directory_role'] = array(
+    'description'  => 'Roles having per-directory download permission.',
+    'fields'       => array(
+      'drid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+      'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+      'rid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+    ),
+    'primary key'  => array('drid'),
+    'foreign keys' => array(
+      'private_files_download_permission_directory' => array(
+        'table'   => 'private_files_download_permission',
+        'columns' => array('did' => 'did'),
+      ),
+      'private_files_download_permission_directory_role' => array(
+        'table'   => 'role',
+        'columns' => array('rid' => 'rid'),
+      ),
+    ),
+    'unique keys'  => array(),
+    'indexes'      => array(),
+  );
+  db_create_table('private_files_download_permission_directory', $schema['private_files_download_permission_directory']);
+  db_create_table('private_files_download_permission_directory_role', $schema['private_files_download_permission_directory_role']);
+  // Add "real" foreign keys.
+  db_query('ALTER TABLE {private_files_download_permission_directory_role}
+            ADD CONSTRAINT {private_files_download_permission_directory}
+            FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE');
+  db_query('ALTER TABLE {private_files_download_permission_directory_role}
+            ADD CONSTRAINT {private_files_download_permission_directory_role}
+            FOREIGN KEY (rid) REFERENCES {role} (rid)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE');
 }
 
 /**
  * Implements hook_uninstall().
  */
 function private_files_download_permission_uninstall() {
-  variable_del('private_files_download_permission_unprotected_subfolder');
+  if (FALSE !== stripos(db_driver(), 'mysql')) {
+    // Remove "real" foreign keys (MySQL database).
+    db_query('ALTER TABLE {private_files_download_permission_directory_role}
+              DROP FOREIGN KEY {private_files_download_permission_directory}');
+    db_query('ALTER TABLE {private_files_download_permission_directory_role}
+              DROP FOREIGN KEY {private_files_download_permission_directory_role}');
+  }
+  else {
+    // Remove "real" foreign keys (non-MySQL database).
+    db_query('ALTER TABLE {private_files_download_permission_directory_role}
+              DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory}');
+    db_query('ALTER TABLE {private_files_download_permission_directory_role}
+              DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_role}');
+  }
 }
