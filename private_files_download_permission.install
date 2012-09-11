@@ -13,41 +13,42 @@
  * Implements hook_schema().
  */
 function private_files_download_permission_schema() {
-  $schema['private_files_download_permission_directory'] = array(
-    'description'  => 'Directories whose permissions are set.',
-    'fields'       => array(
-      'did'  => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-      'path' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
-    ),
-    'primary key'  => array('did'),
-    'foreign keys' => array(),
-    'unique keys'  => array(
-      'path' => array('path'),
-    ),
-    'indexes'      => array(),
-  );
-  $schema['private_files_download_permission_directory_role'] = array(
-    'description'  => 'Roles having per-directory download permission.',
-    'fields'       => array(
-      'drid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-      'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-      'rid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-    ),
-    'primary key'  => array('drid'),
-    'foreign keys' => array(
-      'private_files_download_permission_directory' => array(
-        'table'   => 'private_files_download_permission',
-        'columns' => array('did' => 'did'),
+  return array(
+    'private_files_download_permission_directory' => array(
+      'description'  => 'Directories whose permissions are set.',
+      'fields'       => array(
+        'did'  => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+        'path' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
       ),
-      'private_files_download_permission_directory_role' => array(
-        'table'   => 'role',
-        'columns' => array('rid' => 'rid'),
+      'primary key'  => array('did'),
+      'foreign keys' => array(),
+      'unique keys'  => array(
+        'path' => array('path'),
       ),
+      'indexes'      => array(),
     ),
-    'unique keys'  => array(),
-    'indexes'      => array(),
+    'private_files_download_permission_directory_role' => array(
+      'description'  => 'Roles having per-directory download permission.',
+      'fields'       => array(
+        'drid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+        'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+        'rid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+      ),
+      'primary key'  => array('drid'),
+      'foreign keys' => array(
+        'private_files_download_permission_directory' => array(
+          'table'   => 'private_files_download_permission',
+          'columns' => array('did' => 'did'),
+        ),
+        'private_files_download_permission_directory_role' => array(
+          'table'   => 'role',
+          'columns' => array('rid' => 'rid'),
+        ),
+      ),
+      'unique keys'  => array(),
+      'indexes'      => array(),
+    ),
   );
-  return $schema;
 }
 
 /**
@@ -80,6 +81,7 @@ function private_files_download_permission_update_7200() {
   }
   variable_del('private_files_download_permission_unprotected_subfolder');
   // Implement new schema (rewritten from scratch, see https://drupal.org/node/150220).
+  $schema = array();
   $schema['private_files_download_permission_directory'] = array(
     'description'  => 'Directories whose permissions are set.',
     'fields'       => array(
