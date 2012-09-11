@@ -25,15 +25,14 @@ function private_files_download_permission_permission() {
  * Implements hook_menu().
  */
 function private_files_download_permission_menu() {
-  $items = array();
-  $items['admin/config/media/private-files-download-permission'] = array(
-    'title' => 'Private files download permission',
-    'description' => 'Choose which subfolder within the private file system should be unprotected (which allows to combine both "public" and private downloads).',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('private_files_download_permission_settings'),
-    'access arguments' => array('administer private files download permission'),
+  return array(
+    'admin/config/media/private-files-download-permission/view' => array(
+      'title' => 'Private files download permission',
+      'description' => 'Show directory list view.',
+      'page callback' => 'private_files_download_permission_view',
+      'access arguments' => array('administer private files download permission'),
+    ),
   );
-  return $items;
 }
 
 /**
