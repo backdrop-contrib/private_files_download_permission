@@ -36,6 +36,16 @@ function private_files_download_permission_menu() {
 }
 
 /**
+ * Returns the list of all directories under control.
+ */
+function private_files_download_permission_directory_list() {
+  return db_select('private_files_download_permission_directory')
+           ->orderBy('directory', 'ASC')
+           ->execute()
+           ->fetchAssoc();
+}
+
+/**
  * Form callback (configuration).
  */
 function private_files_download_permission_settings($form, &$form_state) {
