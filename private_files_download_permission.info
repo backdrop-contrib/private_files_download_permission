@@ -1,4 +1,4 @@
 name = Private files download permission
-description = A permission grid to allow by-role and by-directory downloading from the private filesystem.
+description = A permission grid to allow by-role and by-directory downloading from the private file system.
 core = 7.x
 package = Access control
