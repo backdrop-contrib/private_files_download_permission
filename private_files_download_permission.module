@@ -51,11 +51,11 @@ function private_files_download_permission_directory_list() {
 function private_files_download_permission_view() {
   $output = '';
   // Check if the file system download method is set to private.
-  if ('public' == file_default_scheme()) {
-    drupal_set_message(t('You need to set your file system download method to private.'), 'error');
+  if ('private' !== file_default_scheme()) {
+    drupal_set_message(t('You need to !set_your_file_system_download_method to private.', array('!set_your_file_system_download_method' => l(t('set your file system download method'), 'admin/config/media/file-system'))), 'error');
   }
   // Display the private file system path.
-  $output .= t('Your private file system path is %path.', array('%path' => variable_get('file_private_path')));
+  $output .= '<p>' . t('Your private file system path is %path.', array('%path' => variable_get('file_private_path'))) . '</p>';
   // Retrieve the directory list and display it as a table.
   $directory_list = private_files_download_permission_directory_list();
   $rows = array();
@@ -68,7 +68,7 @@ function private_files_download_permission_view() {
   }
   $output .= theme_table(array(
     'header' => array(
-      t('Path'),
+      t('Directory path'),
       array(
         'data' => t('Operations'),
         'colspan' => 2,
@@ -82,7 +82,7 @@ function private_files_download_permission_view() {
     'empty' => t('The directory list is empty.'),
   ));
   // Display the 'Add directory' link.
-  $output .= l(t('Add directory'), 'admin/config/media/private-files-download-permission/edit');
+  $output .= '<p>' . l(t('Add directory'), 'admin/config/media/private-files-download-permission/edit') . '</p>';
   // Return output.
   return $output;
 }
