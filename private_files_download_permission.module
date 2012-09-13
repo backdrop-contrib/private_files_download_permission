@@ -39,10 +39,52 @@ function private_files_download_permission_menu() {
  * Returns the list of all directories under control.
  */
 function private_files_download_permission_directory_list() {
-  return db_select('private_files_download_permission_directory')
-           ->orderBy('directory', 'ASC')
-           ->execute()
-           ->fetchAssoc();
+  return db_query('SELECT   *
+                   FROM     {private_files_download_permission_directory}
+                   ORDER BY {private_files_download_permission_directory}.path ASC')
+           ->fetchAllAssoc('did');
+}
+
+/**
+ * Prepares and displays the main directory list view.
+ */
+function private_files_download_permission_view() {
+  $output = '';
+  // Check if the file system download method is set to private.
+  if ('public' == file_default_scheme()) {
+    drupal_set_message(t('You need to set your file system download method to private.'), 'error');
+  }
+  // Display the private file system path.
+  $output .= t('Your private file system path is %path.', array('%path' => variable_get('file_private_path')));
+  // Retrieve the directory list and display it as a table.
+  $directory_list = private_files_download_permission_directory_list();
+  $rows = array();
+  foreach ($directory_list as $directory) {
+    $rows[] = array(
+      $directory->path,
+      l(t('Edit'), 'admin/config/media/private-files-download-permission/edit/' . $directory->did),
+      l(t('Delete'), 'admin/config/media/private-files-download-permission/delete/' . $directory->did),
+    );
+  }
+  $output .= theme_table(array(
+    'header' => array(
+      t('Path'),
+      array(
+        'data' => t('Operations'),
+        'colspan' => 2,
+      ),
+    ),
+    'rows' => $rows,
+    'attributes' => array(),
+    'caption' => NULL,
+    'colgroups' => array(),
+    'sticky' => FALSE,
+    'empty' => t('The directory list is empty.'),
+  ));
+  // Display the 'Add directory' link.
+  $output .= l(t('Add directory'), 'admin/config/media/private-files-download-permission/edit');
+  // Return output.
+  return $output;
 }
 
 /**
