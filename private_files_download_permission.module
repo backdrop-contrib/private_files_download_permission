@@ -46,7 +46,7 @@ function private_files_download_permission_directory_list() {
 }
 
 /**
- * Prepares and displays the main directory list view.
+ * (Page callback.) Prepares and displays the main directory list view.
  */
 function private_files_download_permission_view() {
   $output = '';
@@ -88,7 +88,7 @@ function private_files_download_permission_view() {
 }
 
 /**
- * Form callback (configuration).
+ * (Page callback.) Configures a directory.
  */
 function private_files_download_permission_settings($form, &$form_state) {
   if ('public' == file_default_scheme()) {
@@ -105,7 +105,7 @@ function private_files_download_permission_settings($form, &$form_state) {
 }
 
 /**
- * Form callback (validation).
+ * (Form callback.) Validates the directory configuration form.
  */
 function private_files_download_permission_settings_validate($form, &$form_state) {
   // Make sure the unprotected subfolder variable does not use leading or trailing slashes.
