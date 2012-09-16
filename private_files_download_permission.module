@@ -128,6 +128,24 @@ function private_files_download_permission_remove($form, &$form_state, $did) {
 }
 
 /**
+ * (Form callback.) Removes a directory from the directory list.
+ */
+function private_files_download_permission_remove_submit($form, &$form_state) {
+  // Check that $form_state['values']['did'] is actually a valid directory id.
+  $directory_list = private_files_download_permission_directory_list();
+  if (!in_array($form_state['values']['did'], array_keys($directory_list))) {
+    drupal_set_message(t('You need to pass a valid directory id.'), 'error');
+    return;
+  }
+  // Remove the associated directory.
+  db_delete('private_files_download_permission_directory')
+    ->condition('did', $form_state['values']['did'])
+    ->execute();
+  // Purge directory list from cache.
+  drupal_static_reset('private_files_download_permission_directory_list');
+}
+
+/**
  * (Page callback.) Configures a directory.
  */
 function private_files_download_permission_settings($form, &$form_state) {
