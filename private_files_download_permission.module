@@ -101,7 +101,8 @@ function private_files_download_permission_view() {
 }
 
 /**
- * (Form callback.) Removes a directory from the directory list.
+ * (Form callback.) Displays a confirmation dialog to remove a directory from
+ * the directory list.
  */
 function private_files_download_permission_remove($form, &$form_state, $did) {
   // Check that $did is actually a valid directory id.
