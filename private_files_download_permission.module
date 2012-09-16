@@ -143,6 +143,8 @@ function private_files_download_permission_remove_submit($form, &$form_state) {
     ->execute();
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_directory_list');
+  // Set form redirection.
+  $form_state['redirect'] = 'admin/config/media/private-files-download-permission/view';
 }
 
 /**
