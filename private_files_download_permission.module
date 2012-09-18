@@ -28,16 +28,31 @@ function private_files_download_permission_menu() {
   return array(
     'admin/config/media/private-files-download-permission/list' => array(
       'title'            => 'Private files download permission',
-      'description'      => 'List directories under control by this module.',
-      'page callback'    => 'private_files_download_permission_list',
+      'description'      => 'List directories under control.',
+      'page callback'    => 'private_files_download_permission_list_directories',
       'access arguments' => array('administer private files download permission'),
       'type'             => MENU_NORMAL_ITEM,
+    ),
+    'admin/config/media/private-files-download-permission/add' => array(
+      'title'            => 'Private files download permission',
+      'description'      => 'Add a directory to the control list.',
+      'page callback'    => 'private_files_download_permission_add_directory',
+      'access arguments' => array('administer private files download permission'),
+      'type'             => MENU_CALLBACK,
+    ),
+    'admin/config/media/private-files-download-permission/%/edit' => array(
+      'title'            => 'Private files download permission',
+      'description'      => 'Edit directory in the control list.',
+      'page callback'    => 'private_files_download_permission_edit_directory',
+      'page arguments'   => array(4),
+      'access arguments' => array('administer private files download permission'),
+      'type'             => MENU_CALLBACK,
     ),
     'admin/config/media/private-files-download-permission/%/remove' => array(
       'title'            => 'Private files download permission',
       'description'      => 'Remove directory from the control list.',
       'page callback'    => 'drupal_get_form',
-      'page arguments'   => array('private_files_download_permission_remove', 4),
+      'page arguments'   => array('private_files_download_permission_remove_directory', 4),
       'access arguments' => array('administer private files download permission'),
       'type'             => MENU_CALLBACK,
     ),
@@ -59,9 +74,9 @@ function private_files_download_permission_directory_list() {
 }
 
 /**
- * (Page callback.) Displays the main page showing the directory list.
+ * (Page callback.) Displays the main page and lists directories under control.
  */
-function private_files_download_permission_list() {
+function private_files_download_permission_list_directories() {
   $output = '';
   // Check if the file system download method is set to private.
   if ('private' !== file_default_scheme()) {
@@ -101,10 +116,55 @@ function private_files_download_permission_list() {
 }
 
 /**
+ * (Form callback.) Displays a form to add/edit a directory.
+ */
+function private_files_download_permission_directory_form($form, &$form_state, $did) {
+  $form = array();
+  // Check that $did is actually a valid directory id, if available.
+  if (NULL !== $did) {
+    $directory_list = private_files_download_permission_directory_list();
+    if (!in_array($did, array_keys($directory_list))) {
+      drupal_set_message(t('You need to provide a valid directory id.'), 'error');
+      return;
+    }
+  }
+  // Prepare the directory id value to be eventually submitted.
+  $form['did'] = array(
+    '#type'  => 'value',
+    '#value' => $did,
+  );
+  // Prepare the remaining form widgets.
+  $form['path'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Path'),
+    '#default_value' => $did, // FIXME
+    '#size'          => 60,
+    '#maxlength'     => 255,
+    '#required'      => TRUE,
+  );
+  // Return form.
+  return $form;
+}
+
+/**
+ * (Page callback.) Adds a directory to the control list.
+ */
+function private_files_download_permission_add_directory() {
+  return drupal_get_form('private_files_download_permission_directory_form', NULL);
+}
+
+/**
+ * (Page callback.) Edits a directory in the control list.
+ */
+function private_files_download_permission_edit_directory($did) {
+  return drupal_get_form('private_files_download_permission_directory_form', $did);
+}
+
+/**
  * (Form callback.) Displays a confirmation dialog before removing a directory
  * from the control list.
  */
-function private_files_download_permission_remove($form, &$form_state, $did) {
+function private_files_download_permission_remove_directory($form, &$form_state, $did) {
   $form = array();
   // Check that $did is actually a valid directory id.
   $directory_list = private_files_download_permission_directory_list();
@@ -112,7 +172,7 @@ function private_files_download_permission_remove($form, &$form_state, $did) {
     drupal_set_message(t('You need to provide a valid directory id.'), 'error');
     return;
   }
-  // Prepare the value to be eventually submitted.
+  // Prepare the directory id value to be eventually submitted.
   $form['did'] = array(
     '#type'  => 'value',
     '#value' => $did,
@@ -131,7 +191,7 @@ function private_files_download_permission_remove($form, &$form_state, $did) {
 /**
  * (Form callback.) Removes a directory from the control list.
  */
-function private_files_download_permission_remove_submit($form, &$form_state) {
+function private_files_download_permission_remove_directory_submit($form, &$form_state) {
   // Check that $form_state['values']['did'] is actually a valid directory id.
   $directory_list = private_files_download_permission_directory_list();
   if (!in_array($form_state['values']['did'], array_keys($directory_list))) {
