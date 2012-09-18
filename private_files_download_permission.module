@@ -15,7 +15,7 @@
 function private_files_download_permission_permission() {
   return array(
     'administer private files download permission' => array(
-      'title' => t('Administer Private files download permission'),
+      'title'       => t('Administer Private files download permission'),
       'description' => t('Access module configuration.'),
     ),
   );
@@ -26,20 +26,20 @@ function private_files_download_permission_permission() {
  */
 function private_files_download_permission_menu() {
   return array(
-    'admin/config/media/private-files-download-permission/view' => array(
-      'title' => 'Private files download permission',
-      'description' => 'Show directory list.',
-      'page callback' => 'private_files_download_permission_view',
+    'admin/config/media/private-files-download-permission/list' => array(
+      'title'            => 'Private files download permission',
+      'description'      => 'List directories under control by this module.',
+      'page callback'    => 'private_files_download_permission_list',
       'access arguments' => array('administer private files download permission'),
-      'type' => MENU_NORMAL_ITEM,
+      'type'             => MENU_NORMAL_ITEM,
     ),
-    'admin/config/media/private-files-download-permission/remove/%' => array(
-      'title' => 'Private files download permission',
-      'description' => 'Remove directory from list.',
-      'page callback' => 'drupal_get_form',
-      'page arguments' => array('private_files_download_permission_remove', 5),
+    'admin/config/media/private-files-download-permission/%/remove' => array(
+      'title'            => 'Private files download permission',
+      'description'      => 'Remove directory from the control list.',
+      'page callback'    => 'drupal_get_form',
+      'page arguments'   => array('private_files_download_permission_remove', 4),
       'access arguments' => array('administer private files download permission'),
-      'type' => MENU_CALLBACK,
+      'type'             => MENU_CALLBACK,
     ),
   );
 }
@@ -59,9 +59,9 @@ function private_files_download_permission_directory_list() {
 }
 
 /**
- * (Page callback.) Prepares and displays the main directory list view.
+ * (Page callback.) Displays the main page showing the directory list.
  */
-function private_files_download_permission_view() {
+function private_files_download_permission_list() {
   $output = '';
   // Check if the file system download method is set to private.
   if ('private' !== file_default_scheme()) {
@@ -75,36 +75,37 @@ function private_files_download_permission_view() {
   foreach ($directory_list as $directory) {
     $rows[] = array(
       $directory->path,
-      l(t('Edit'), 'admin/config/media/private-files-download-permission/edit/' . $directory->did),
-      l(t('Remove'), 'admin/config/media/private-files-download-permission/remove/' . $directory->did),
+      l(t('Edit'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/edit/'),
+      l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/remove/'),
     );
   }
   $output .= theme_table(array(
     'header' => array(
       t('Directory path'),
       array(
-        'data' => t('Operations'),
+        'data'    => t('Operations'),
         'colspan' => 2,
       ),
     ),
-    'rows' => $rows,
+    'rows'       => $rows,
     'attributes' => array(),
-    'caption' => NULL,
-    'colgroups' => array(),
-    'sticky' => FALSE,
-    'empty' => t('The directory list is empty.'),
+    'caption'    => NULL,
+    'colgroups'  => array(),
+    'sticky'     => FALSE,
+    'empty'      => t('The directory list is empty.'),
   ));
   // Display the 'Add directory' link.
-  $output .= '<p>' . l(t('Add directory'), 'admin/config/media/private-files-download-permission/edit') . '</p>';
-  // Return output.
+  $output .= '<p>' . l(t('Add directory'), 'admin/config/media/private-files-download-permission/add') . '</p>';
+  // Display output.
   return $output;
 }
 
 /**
  * (Form callback.) Displays a confirmation dialog before removing a directory
- * from the directory list.
+ * from the control list.
  */
 function private_files_download_permission_remove($form, &$form_state, $did) {
+  $form = array();
   // Check that $did is actually a valid directory id.
   $directory_list = private_files_download_permission_directory_list();
   if (!in_array($did, array_keys($directory_list))) {
@@ -116,19 +117,19 @@ function private_files_download_permission_remove($form, &$form_state, $did) {
     '#type'  => 'value',
     '#value' => $did,
   );
-  // Return the confirmation form.
+  // Display the confirmation form.
   return confirm_form(
     $form,
-    t('Are you sure you want to remove @path from the directory list?', array('@path' => $directory_list[$did]->path)),
-    'admin/config/media/private-files-download-permission/view',
+    t('Are you sure you want to remove @path from the control list?', array('@path' => $directory_list[$did]->path)),
+    'admin/config/media/private-files-download-permission/list',
     t('This action cannot be undone.'),
-    t('Remove directory from list'),
+    t('Remove directory from the control list'),
     t('Cancel')
   );
 }
 
 /**
- * (Form callback.) Removes a directory from the directory list.
+ * (Form callback.) Removes a directory from the control list.
  */
 function private_files_download_permission_remove_submit($form, &$form_state) {
   // Check that $form_state['values']['did'] is actually a valid directory id.
@@ -144,51 +145,5 @@ function private_files_download_permission_remove_submit($form, &$form_state) {
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_directory_list');
   // Set form redirection.
-  $form_state['redirect'] = 'admin/config/media/private-files-download-permission/view';
-}
-
-/**
- * (Page callback.) Configures a directory.
- */
-function private_files_download_permission_settings($form, &$form_state) {
-  if ('public' == file_default_scheme()) {
-    drupal_set_message(t('You need to enable the private file system before you setup this module.'), 'error');
-  }
-  $form['private_files_download_permission_unprotected_subfolder'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Unprotected subfolder'),
-    '#default_value' => variable_get('private_files_download_permission_unprotected_subfolder'),
-    '#size' => '60',
-    '#description' => t('Use a relative path and don\'t add leading or trailing slashes. Caution: private downloads filters will be bypassed for the above subfolder (making it "public")!'),
-  );
-  return system_settings_form($form);
-}
-
-/**
- * (Form callback.) Validates the directory configuration form.
- */
-function private_files_download_permission_settings_validate($form, &$form_state) {
-  // Make sure the unprotected subfolder variable does not use leading or trailing slashes.
-  $unprotected_subfolder = $form_state['values']['private_files_download_permission_unprotected_subfolder'];
-  if (0 < drupal_strlen($unprotected_subfolder)) {
-    $first_char = drupal_substr($unprotected_subfolder, 0, 1);
-    $last_char = drupal_substr($unprotected_subfolder, -1, 1);
-    if (('/' == $first_char) || ('\\' == $first_char)) {
-      form_set_error('private_files_download_permission_unprotected_subfolder', t('You cannot use leading slashes.'));
-    }
-    if (('/' == $last_char) || ('\\' == $last_char)) {
-      form_set_error('private_files_download_permission_unprotected_subfolder', t('You cannot use trailing slashes.'));
-    }
-  }
-}
-
-/**
- * Implements hook_file_download().
- */
-function private_files_download_permission_file_download($uri) {
-  $path = explode('/', $uri);
-  if (($path[2] === variable_get('private_files_download_permission_unprotected_subfolder')) || (user_access('download private files'))) {
-    return array('Content-Type' => file_get_mimetype($uri));
-  }
-  return -1;
+  $form_state['redirect'] = 'admin/config/media/private-files-download-permission/list';
 }
