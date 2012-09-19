@@ -118,7 +118,7 @@ function private_files_download_permission_list_directories() {
 /**
  * (Form callback.) Displays a form to add/edit a directory.
  */
-function private_files_download_permission_directory_form($form, &$form_state, $did) {
+function private_files_download_permission_get_directory_form($form, &$form_state, $did) {
   $form = array();
   // Check that $did is actually a valid directory id, if available.
   if (NULL !== $did) {
@@ -150,14 +150,14 @@ function private_files_download_permission_directory_form($form, &$form_state, $
  * (Page callback.) Adds a directory to the control list.
  */
 function private_files_download_permission_add_directory() {
-  return drupal_get_form('private_files_download_permission_directory_form', NULL);
+  return drupal_get_form('private_files_download_permission_get_directory_form', NULL);
 }
 
 /**
  * (Page callback.) Edits a directory in the control list.
  */
 function private_files_download_permission_edit_directory($did) {
-  return drupal_get_form('private_files_download_permission_directory_form', $did);
+  return drupal_get_form('private_files_download_permission_get_directory_form', $did);
 }
 
 /**
