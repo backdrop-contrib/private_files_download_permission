@@ -65,10 +65,27 @@ function private_files_download_permission_menu() {
 function private_files_download_permission_get_directory_list() {
   $directory_list = &drupal_static(__FUNCTION__);
   if (!isset($directory_list)) {
-    $directory_list = db_query('SELECT   *
-                                FROM     {private_files_download_permission_directory}
-                                ORDER BY {private_files_download_permission_directory}.path ASC')
+    // Load directory list.
+    $directory_list = db_select('private_files_download_permission_directory', 't')
+                        ->fields('t')
+                        ->orderBy('t.path', 'ASC')
+                        ->execute()
                         ->fetchAllAssoc('did');
+    // Load directory role list.
+    $directory_roles = db_select('private_files_download_permission_directory_role', 't')
+                         ->fields('t')
+                         ->orderBy('t.did', 'ASC')
+                         ->execute()
+                         ->fetchAll();
+    // Merge array values.
+    foreach ($directory_roles as $directory_role) {
+      $did = $directory_role->did;
+      $rid = $directory_role->rid;
+      if (!isset($directory_list[$did]->rid)) {
+        $directory_list[$did]->rid = array();
+      }   
+      $directory_list[$did]->rid[] = $rid;
+    }
   }
   return $directory_list;
 }
