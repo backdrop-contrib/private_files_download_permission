@@ -62,7 +62,7 @@ function private_files_download_permission_menu() {
 /**
  * Returns the list of all directories under control.
  */
-function private_files_download_permission_directory_list() {
+function private_files_download_permission_get_directory_list() {
   $directory_list = &drupal_static(__FUNCTION__);
   if (!isset($directory_list)) {
     $directory_list = db_query('SELECT   *
@@ -85,7 +85,7 @@ function private_files_download_permission_list_directories() {
   // Display the private file system path.
   $output .= '<p>' . t('Your private file system path is %path.', array('%path' => variable_get('file_private_path'))) . '</p>';
   // Retrieve the directory list and display it as a table.
-  $directory_list = private_files_download_permission_directory_list();
+  $directory_list = private_files_download_permission_get_directory_list();
   $rows = array();
   foreach ($directory_list as $directory) {
     $rows[] = array(
@@ -122,7 +122,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   $form = array();
   // Check that $did is actually a valid directory id, if available.
   if (NULL !== $did) {
-    $directory_list = private_files_download_permission_directory_list();
+    $directory_list = private_files_download_permission_get_directory_list();
     if (!in_array($did, array_keys($directory_list))) {
       drupal_set_message(t('You need to provide a valid directory id.'), 'error');
       return;
@@ -167,7 +167,7 @@ function private_files_download_permission_edit_directory($did) {
 function private_files_download_permission_remove_directory($form, &$form_state, $did) {
   $form = array();
   // Check that $did is actually a valid directory id.
-  $directory_list = private_files_download_permission_directory_list();
+  $directory_list = private_files_download_permission_get_directory_list();
   if (!in_array($did, array_keys($directory_list))) {
     drupal_set_message(t('You need to provide a valid directory id.'), 'error');
     return;
@@ -193,7 +193,7 @@ function private_files_download_permission_remove_directory($form, &$form_state,
  */
 function private_files_download_permission_remove_directory_submit($form, &$form_state) {
   // Check that $form_state['values']['did'] is actually a valid directory id.
-  $directory_list = private_files_download_permission_directory_list();
+  $directory_list = private_files_download_permission_get_directory_list();
   if (!in_array($form_state['values']['did'], array_keys($directory_list))) {
     drupal_set_message(t('You need to provide a valid directory id.'), 'error');
     return;
@@ -203,7 +203,7 @@ function private_files_download_permission_remove_directory_submit($form, &$form
     ->condition('did', $form_state['values']['did'])
     ->execute();
   // Purge directory list from cache.
-  drupal_static_reset('private_files_download_permission_directory_list');
+  drupal_static_reset('private_files_download_permission_get_directory_list');
   // Set form redirection.
   $form_state['redirect'] = 'admin/config/media/private-files-download-permission/list';
 }
