@@ -136,14 +136,23 @@ function private_files_download_permission_list_directories() {
  * (Form callback.) Displays a form to add/edit a directory.
  */
 function private_files_download_permission_get_directory_form($form, &$form_state, $did) {
+  $roles = user_roles();
+  sort($roles);
+  $directory_list = private_files_download_permission_get_directory_list();
   $form = array();
-  // Check that $did is actually a valid directory id, if available.
+  // Check that $did is actually a valid directory id, if not blank.
   if (NULL !== $did) {
-    $directory_list = private_files_download_permission_get_directory_list();
     if (!in_array($did, array_keys($directory_list))) {
       drupal_set_message(t('You need to provide a valid directory id.'), 'error');
       return;
     }
+  }
+  // Prepare default values.
+  $default_path = NULL;
+  $default_roles = array();
+  if (NULL !== $did) {
+    $default_path = $directory_list[$did]->path;
+    $default_roles = array_keys($directory_list[$did]->rid);
   }
   // Prepare the directory id value to be eventually submitted.
   $form['did'] = array(
@@ -157,7 +166,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#size'          => 60,
     '#maxlength'     => 255,
     '#required'      => TRUE,
-    '#default_value' => $did, // FIXME
+    '#default_value' => $default_path,
   );
   // Prepare the role checkbox fieldset.
   $form['roles'] = array (
@@ -165,14 +174,12 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#title' => t('Enabled roles'),
   );
   // Prepare role checkboxes.
-  $roles = user_roles();
-  sort($roles);
   foreach ($roles as $rid => $role) {
     $form['roles']['role_' . $rid] = array(
       '#type'          => 'checkbox',
       '#title'         => $role,
       '#return_value'  => $rid,
-      '#default_value' => TRUE, // FIXME
+      '#default_value' => in_array($rid, $default_roles),
     );
   }
   // Prepare buttons.
