@@ -108,6 +108,7 @@ function private_files_download_permission_list_directories() {
   foreach ($directory_list as $directory) {
     // Prepare the 'Enabled roles' cell.
     $enabled_roles = array_intersect_key($roles, $directory->rid);
+    sort($enabled_roles);
     // Fill table row.
     $rows[] = array(
       $directory->path,
