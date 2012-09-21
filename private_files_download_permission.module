@@ -71,6 +71,10 @@ function private_files_download_permission_get_directory_list() {
                         ->orderBy('t.path', 'ASC')
                         ->execute()
                         ->fetchAllAssoc('did');
+    // Add role id array to each directory.
+    foreach ($directory_list as $directory) {
+      $directory->rid = array();
+    }
     // Load directory role list.
     $directory_roles = db_select('private_files_download_permission_directory_role', 't')
                          ->fields('t')
@@ -81,9 +85,6 @@ function private_files_download_permission_get_directory_list() {
     foreach ($directory_roles as $directory_role) {
       $did = $directory_role->did;
       $rid = $directory_role->rid;
-      if (!isset($directory_list[$did]->rid)) {
-        $directory_list[$did]->rid = array();
-      }   
       $directory_list[$did]->rid[$rid] = array('rid' => $rid);
     }
   }
