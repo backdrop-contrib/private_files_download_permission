@@ -143,8 +143,6 @@ function private_files_download_permission_list_directories() {
  * (Form callback.) Displays a form to add/edit a directory.
  */
 function private_files_download_permission_get_directory_form($form, &$form_state, $did) {
-  $roles = user_roles();
-  sort($roles);
   $directory_list = private_files_download_permission_get_directory_list();
   $form = array();
   // Check that $did is actually a valid directory id, if not blank.
@@ -181,6 +179,9 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#title' => t('Enabled roles'),
   );
   // Prepare role checkboxes.
+  $roles = array_flip(user_roles());
+  ksort($roles);
+  $roles = array_flip($roles);
   foreach ($roles as $rid => $role) {
     $form['roles']['role_' . $rid] = array(
       '#type'          => 'checkbox',
