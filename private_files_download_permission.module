@@ -219,6 +219,12 @@ function private_files_download_permission_get_directory_form_validate($form, &$
 }
 
 /**
+ * (Form callback.) Submits the directory form.
+ */
+function private_files_download_permission_get_directory_form_submit($form, &$form_state) {
+}
+
+/**
  * (Page callback.) Adds a directory to the control list.
  */
 function private_files_download_permission_add_directory() {
