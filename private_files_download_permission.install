@@ -136,7 +136,7 @@ function private_files_download_permission_update_7200() {
  */
 function private_files_download_permission_enable() {
   // Purge directory list from cache.
-  drupal_static_reset('private_files_download_permission_get_directory_list');
+  drupal_static_reset('private_files_download_permission_directory_list');
 }
 
 /**
@@ -158,5 +158,5 @@ function private_files_download_permission_uninstall() {
               DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_role}');
   }
   // Purge directory list from cache.
-  drupal_static_reset('private_files_download_permission_get_directory_list');
+  drupal_static_reset('private_files_download_permission_directory_list');
 }

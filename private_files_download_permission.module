@@ -63,7 +63,7 @@ function private_files_download_permission_menu() {
  * Returns the list of all directories under control.
  */
 function private_files_download_permission_get_directory_list() {
-  $directory_list = &drupal_static(__FUNCTION__);
+  $directory_list = &drupal_static('private_files_download_permission_directory_list');
   if (!isset($directory_list)) {
     // Load directory list.
     $directory_list = db_select('private_files_download_permission_directory', 't')
