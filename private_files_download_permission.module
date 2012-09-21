@@ -188,7 +188,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
  * (Form callback.) Validates a form.
  */
 function private_files_download_permission_get_directory_form_validate($form, &$form_state) {
-  // Retrieve $path value (which, being required, is surely not blank).
+  // Retrieve $path (which, being required, is surely not blank).
   $path = $form_state['values']['path'];
   // Perform slash validation.
   if (0 < drupal_strlen($path)) {
