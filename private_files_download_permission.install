@@ -132,6 +132,14 @@ function private_files_download_permission_update_7200() {
 }
 
 /**
+ * Implements hook_enable().
+ */
+function private_files_download_permission_enable() {
+  // Purge directory list from cache.
+  drupal_static_reset('private_files_download_permission_get_directory_list');
+}
+
+/**
  * Implements hook_uninstall().
  */
 function private_files_download_permission_uninstall() {
@@ -149,4 +157,6 @@ function private_files_download_permission_uninstall() {
     db_query('ALTER TABLE {private_files_download_permission_directory_role}
               DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_role}');
   }
+  // Purge directory list from cache.
+  drupal_static_reset('private_files_download_permission_get_directory_list');
 }
