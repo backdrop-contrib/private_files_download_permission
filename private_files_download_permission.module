@@ -200,7 +200,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
 }
 
 /**
- * (Form callback.) Validates a form.
+ * (Form callback.) Validates the directory form.
  */
 function private_files_download_permission_get_directory_form_validate($form, &$form_state) {
   // Retrieve $path (which, being required, is surely not blank).
