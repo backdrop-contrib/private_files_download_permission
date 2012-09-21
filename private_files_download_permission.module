@@ -186,7 +186,6 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     $form['roles']['role_' . $rid] = array(
       '#type'          => 'checkbox',
       '#title'         => $role,
-      '#return_value'  => $rid,
       '#default_value' => in_array($rid, $default_roles),
     );
   }
