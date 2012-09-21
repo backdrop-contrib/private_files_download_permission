@@ -84,7 +84,7 @@ function private_files_download_permission_get_directory_list() {
       if (!isset($directory_list[$did]->rid)) {
         $directory_list[$did]->rid = array();
       }   
-      $directory_list[$did]->rid[] = $rid;
+      $directory_list[$did]->rid[$rid] = array('rid' => $rid);
     }
   }
   return $directory_list;
@@ -103,10 +103,15 @@ function private_files_download_permission_list_directories() {
   $output .= '<p>' . t('Your private file system path is %path.', array('%path' => variable_get('file_private_path'))) . '</p>';
   // Retrieve the directory list and display it as a table.
   $directory_list = private_files_download_permission_get_directory_list();
+  $roles = user_roles();
   $rows = array();
   foreach ($directory_list as $directory) {
+    // Prepare the 'Enabled roles' cell.
+    $enabled_roles = array_intersect_key($roles, $directory->rid);
+    // Fill table row.
     $rows[] = array(
       $directory->path,
+      implode(', ', $enabled_roles),
       l(t('Edit'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/edit/'),
       l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/remove/'),
     );
@@ -114,6 +119,7 @@ function private_files_download_permission_list_directories() {
   $output .= theme_table(array(
     'header' => array(
       t('Directory path'),
+      t('Enabled roles'),
       array(
         'data'    => t('Operations'),
         'colspan' => 2,
