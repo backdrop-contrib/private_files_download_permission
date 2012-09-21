@@ -34,14 +34,14 @@ function private_files_download_permission_menu() {
       'type'             => MENU_NORMAL_ITEM,
     ),
     'admin/config/media/private-files-download-permission/add' => array(
-      'title'            => 'Private files download permission',
-      'description'      => 'Add a directory to the control list.',
+      'title'            => 'Add directory',
+      'description'      => 'Add directory to the control list.',
       'page callback'    => 'private_files_download_permission_add_directory',
       'access arguments' => array('administer private files download permission'),
       'type'             => MENU_CALLBACK,
     ),
     'admin/config/media/private-files-download-permission/%/edit' => array(
-      'title'            => 'Private files download permission',
+      'title'            => 'Edit directory',
       'description'      => 'Edit directory in the control list.',
       'page callback'    => 'private_files_download_permission_edit_directory',
       'page arguments'   => array(4),
@@ -49,7 +49,7 @@ function private_files_download_permission_menu() {
       'type'             => MENU_CALLBACK,
     ),
     'admin/config/media/private-files-download-permission/%/remove' => array(
-      'title'            => 'Private files download permission',
+      'title'            => 'Remove directory',
       'description'      => 'Remove directory from the control list.',
       'page callback'    => 'drupal_get_form',
       'page arguments'   => array('private_files_download_permission_remove_directory', 4),
