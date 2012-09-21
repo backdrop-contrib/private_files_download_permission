@@ -150,14 +150,35 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#type'  => 'value',
     '#value' => $did,
   );
-  // Prepare the remaining form widgets.
+  // Prepare the path text field.
   $form['path'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Path'),
-    '#default_value' => $did, // FIXME
     '#size'          => 60,
     '#maxlength'     => 255,
     '#required'      => TRUE,
+    '#default_value' => $did, // FIXME
+  );
+  // Prepare the role checkbox fieldset.
+  $form['roles'] = array (
+    '#type'  => 'fieldset',
+    '#title' => t('Enabled roles'),
+  );
+  // Prepare role checkboxes.
+  $roles = user_roles();
+  sort($roles);
+  foreach ($roles as $rid => $role) {
+    $form['roles']['role_' . $rid] = array(
+      '#type'          => 'checkbox',
+      '#title'         => $role,
+      '#return_value'  => $rid,
+      '#default_value' => TRUE, // FIXME
+    );
+  }
+  // Prepare buttons.
+  $form['submit'] = array(
+    '#type'  => 'submit',
+    '#value' => t('Save directory settings'),
   );
   // Return form.
   return $form;
