@@ -240,19 +240,14 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
       'path' => $path,
     );
     if (NULL === $did) {
-      $result = db_insert('private_files_download_permission_directory');
+      drupal_write_record('private_files_download_permission_directory', $directory_record);
     }
     else {
-      $result = db_update('private_files_download_permission_directory');
+      drupal_write_record('private_files_download_permission_directory', $directory_record, array('did'));
     }
-    $result->fields(array(
-               'did'  => $did,
-               'path' => $path,
-             ))
-           ->execute();
     // Retrieve last record id.
     if (NULL === $did) {
-      $did = $result;
+      $did = $directory_record['did'];
     }
     // Delete old role permissions and write new ones.
     db_delete('private_files_download_permission_directory_role')
