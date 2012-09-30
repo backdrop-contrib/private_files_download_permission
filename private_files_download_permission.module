@@ -222,49 +222,56 @@ function private_files_download_permission_get_directory_form_validate($form, &$
  * (Form callback.) Submits the directory form.
  */
 function private_files_download_permission_get_directory_form_submit($form, &$form_state) {
-  // Retrieve form values.
-  $did = $form_state['values']['did'];
-  $path = $form_state['values']['path'];
-  $roles = array();
-  foreach ($form_state['values'] as $key => $value) {
-    if (0 === strpos($key, 'role_')) {
-      $rid = substr($key, strlen('role_'));
-      $roles[$rid] = $value;
+  $transaction = db_transaction();
+  try {
+    // Retrieve form values.
+    $did = $form_state['values']['did'];
+    $path = $form_state['values']['path'];
+    $roles = array();
+    foreach ($form_state['values'] as $key => $value) {
+      if (0 === strpos($key, 'role_')) {
+        $rid = substr($key, strlen('role_'));
+        $roles[$rid] = $value;
+      }
+    }
+    // Write directory record.
+    $directory_record = array(
+      'did'  => $did,
+      'path' => $path,
+    );
+    if (NULL === $did) {
+      $result = db_insert('private_files_download_permission_directory');
+    }
+    else {
+      $result = db_update('private_files_download_permission_directory');
+    }
+    $result->fields(array(
+               'did'  => $did,
+               'path' => $path,
+             ))
+           ->execute();
+    // Retrieve last record id.
+    if (NULL === $did) {
+      $did = $result;
+    }
+    // Delete old role permissions and write new ones.
+    db_delete('private_files_download_permission_directory_role')
+      ->condition('did', $did)
+      ->execute();
+    foreach ($roles as $rid => $value) {
+      if (TRUE == $value) {
+        db_insert('private_files_download_permission_directory_role')
+          ->fields(array(
+            'did' => $did,
+            'rid' => $rid,
+            ))
+          ->execute();
+      }
     }
   }
-  // Write directory record.
-  $directory_record = array(
-    'did'  => $did,
-    'path' => $path,
-  );
-  if (NULL === $did) {
-    $result = db_insert('private_files_download_permission_directory');
-  }
-  else {
-    $result = db_update('private_files_download_permission_directory');
-  }
-  $result->fields(array(
-             'did'  => $did,
-             'path' => $path,
-           ))
-         ->execute();
-  // Retrieve last record id.
-  if (NULL === $did) {
-    $did = $result;
-  }
-  // Delete old role permissions and write new ones.
-  db_delete('private_files_download_permission_directory_role')
-    ->condition('did', $did)
-    ->execute();
-  foreach ($roles as $rid => $value) {
-    if (TRUE == $value) {
-      db_insert('private_files_download_permission_directory_role')
-        ->fields(array(
-          'did' => $did,
-          'rid' => $rid,
-          ))
-        ->execute();
-    }
+  catch (Exception $e) {
+    $transaction->rollback();
+    drupal_set_message(t('An error occurred while saving directory to the control list. Please check the log for details.'), 'error');
   }
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_get_directory_list');
@@ -318,16 +325,23 @@ function private_files_download_permission_remove_directory($form, &$form_state,
  * (Form callback.) Removes a directory from the control list.
  */
 function private_files_download_permission_remove_directory_submit($form, &$form_state) {
-  // Check that $form_state['values']['did'] is actually a valid directory id.
-  $directory_list = private_files_download_permission_get_directory_list();
-  if (!in_array($form_state['values']['did'], array_keys($directory_list))) {
-    drupal_set_message(t('You need to provide a valid directory id.'), 'error');
-    return;
+  $transaction = db_transaction();
+  try {
+    // Check that $form_state['values']['did'] is actually a valid directory id.
+    $directory_list = private_files_download_permission_get_directory_list();
+    if (!in_array($form_state['values']['did'], array_keys($directory_list))) {
+      drupal_set_message(t('You need to provide a valid directory id.'), 'error');
+      return;
+    }
+    // Remove the associated directory.
+    db_delete('private_files_download_permission_directory')
+      ->condition('did', $form_state['values']['did'])
+      ->execute();
   }
-  // Remove the associated directory.
-  db_delete('private_files_download_permission_directory')
-    ->condition('did', $form_state['values']['did'])
-    ->execute();
+  catch (Exception $e) {
+    $transaction->rollback();
+    drupal_set_message(t('An error occurred while removing directory from the control list. Please check the log for details.'), 'error');
+  }
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_get_directory_list');
   // Set form redirection.
