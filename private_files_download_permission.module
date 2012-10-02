@@ -101,7 +101,13 @@ function private_files_download_permission_list_directories() {
     drupal_set_message(t('You need to !set_your_file_system_download_method to private.', array('!set_your_file_system_download_method' => l(t('set your file system download method'), 'admin/config/media/file-system'))), 'error');
   }
   // Display the private file system path.
-  $output .= '<p>' . t('Your private file system path is %path.', array('%path' => variable_get('file_private_path'))) . '</p>';
+  $private_path = variable_get('file_private_path');
+  if (!$private_path) {
+    $output .= '<p>' . t('Your private file system path is not set.') . '</p>';
+  }
+  else {
+    $output .= '<p>' . t('Your private file system path is %path.', array('%path' => $private_path)) . '</p>';
+  }
   // Retrieve the directory list and display it as a table.
   $directory_list = private_files_download_permission_get_directory_list();
   $roles = user_roles();
