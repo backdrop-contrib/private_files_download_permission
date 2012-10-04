@@ -67,20 +67,20 @@ function private_files_download_permission_get_directory_list() {
   if (!isset($directory_list)) {
     // Load directory list.
     $directory_list = db_select('private_files_download_permission_directory', 't')
-                        ->fields('t')
-                        ->orderBy('t.path', 'ASC')
-                        ->execute()
-                        ->fetchAllAssoc('did');
+      ->fields('t')
+      ->orderBy('t.path', 'ASC')
+      ->execute()
+      ->fetchAllAssoc('did');
     // Add role id array to each directory.
     foreach ($directory_list as $directory) {
       $directory->rid = array();
     }
     // Load directory role list.
     $directory_roles = db_select('private_files_download_permission_directory_role', 't')
-                         ->fields('t')
-                         ->orderBy('t.did', 'ASC')
-                         ->execute()
-                         ->fetchAll();
+      ->fields('t')
+      ->orderBy('t.did', 'ASC')
+      ->execute()
+      ->fetchAll();
     // Merge array values.
     foreach ($directory_roles as $directory_role) {
       $did = $directory_role->did;
@@ -181,7 +181,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#default_value' => $default_path,
   );
   // Prepare the role checkbox fieldset.
-  $form['roles'] = array (
+  $form['roles'] = array(
     '#type'  => 'fieldset',
     '#title' => t('Enabled roles'),
   );
@@ -192,7 +192,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   foreach ($roles as $rid => $role) {
     $form['roles']['role_' . $rid] = array(
       '#type'          => 'checkbox',
-      '#title'         => $role,
+      '#title'         => check_plain($role),
       '#default_value' => in_array($rid, $default_roles),
     );
   }
@@ -241,7 +241,7 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
     $roles = array();
     foreach ($form_state['values'] as $key => $value) {
       if (0 === strpos($key, 'role_')) {
-        $rid = substr($key, strlen('role_'));
+        $rid = drupal_substr($key, drupal_strlen('role_'));
         $roles[$rid] = $value;
       }
     }
@@ -373,8 +373,8 @@ function private_files_download_permission_file_download($uri) {
     // Search for the best matching substring.
     $directory_path = $directory->path;
     if (0 === stripos($uri_path, $directory_path)) {
-      if (strlen($directory_path) > $best_matching_length) {
-        $best_matching_length = strlen($directory_path);
+      if (drupal_strlen($directory_path) > $best_matching_length) {
+        $best_matching_length = drupal_strlen($directory_path);
         $best_matching_directory = $directory;
       }
     }
@@ -390,7 +390,3 @@ function private_files_download_permission_file_download($uri) {
   // By default, deny access.
   return -1;
 }
-
-
-
-
