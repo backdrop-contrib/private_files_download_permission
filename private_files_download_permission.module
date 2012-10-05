@@ -96,7 +96,7 @@ function private_files_download_permission_get_directory_list() {
  */
 function private_files_download_permission_list_directories() {
   $output = '';
-  // Check if the file system download method is set to private.
+  // Check if file system download method is set to private.
   if ('private' !== file_default_scheme()) {
     drupal_set_message(t('You need to !set_your_file_system_download_method to private.', array('!set_your_file_system_download_method' => l(t('set your file system download method'), 'admin/config/media/file-system'))), 'error');
   }
@@ -108,7 +108,7 @@ function private_files_download_permission_list_directories() {
   else {
     $output .= '<p>' . t('Your private file system path is %path.', array('%path' => $private_path)) . '</p>';
   }
-  // Retrieve the directory list and display it as a table.
+  // Retrieve directory list and display it as a table.
   $directory_list = private_files_download_permission_get_directory_list();
   $roles = user_roles();
   $rows = array();
@@ -194,7 +194,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
       '#default_value' => in_array($rid, $default_roles),
     );
   }
-  // Prepare buttons.
+  // Prepare the submit button.
   $form['submit'] = array(
     '#type'  => 'submit',
     '#value' => t('Save directory to the control list'),
@@ -209,17 +209,20 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
 function private_files_download_permission_get_directory_form_validate($form, &$form_state) {
   // Retrieve $path (which, being required, is surely not blank).
   $path = $form_state['values']['path'];
-  // Perform slash validation.
+  // Perform slash validation:
   if (0 < drupal_strlen($path)) {
     $first_character = drupal_substr($path, 0, 1);
     $last_character = drupal_substr($path, -1, 1);
+    // ...there must be a leading slash.
     if (('/' !== $first_character) && ('\\' !== $first_character)) {
       form_set_error('path', t('You must add a leading slash.'));
     }
     if (1 < drupal_strlen($path)) {
+      // ...there cannot be multiple consecutive slashes.
       if ((FALSE !== strpos($path, '//')) || (FALSE !== strpos($path, '\\\\'))) {
         form_set_error('path', t('You cannot use multiple consecutive slashes.'));
       }
+      // ...there cannot be trailing slashes.
       if (('/' === $last_character) || ('\\' === $last_character)) {
         form_set_error('path', t('You cannot use trailing slashes.'));
       }
