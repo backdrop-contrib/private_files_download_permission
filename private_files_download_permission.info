@@ -1,4 +1,4 @@
 name = Private files download permission
-description = Allows by-directory and by-role downloading from the private file system.
+description = Allows or denies by-directory and by-role downloads from the private file system.
 core = 7.x
 package = Access control
