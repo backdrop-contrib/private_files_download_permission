@@ -26,5 +26,10 @@ All directory paths are relative to your private filesystem path, but must have
 a leading slash ('/'), since the private filesystem root itself could be put
 under control.
 
+Example.
+Suppose your private file system path is /opt/private.
+You could protect /opt/private itself by configuring a '/' directory entry,
+while a '/test' item would refer to /opt/private/test.
+
 Also configure which roles have access to the module configuration under
 People > Permissions (url: /admin/people/permissions).
