@@ -27,9 +27,10 @@ a leading slash ('/'), since the private filesystem root itself could be put
 under control.
 
 Example.
-Suppose your private file system path is /opt/private.
-You could protect /opt/private itself by configuring a '/' directory entry,
-while a '/test' item would refer to /opt/private/test.
+Suppose your private filesystem path is /opt/private.
+You could configure /opt/private (and all its subdirectories) by adding a '/'
+entry, while a '/test' item would specifically refer to /opt/private/test (and
+all its subdirectories).
 
 Also configure which roles have access to the module configuration under
 People > Permissions (url: /admin/people/permissions).
