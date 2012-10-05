@@ -26,9 +26,9 @@ function private_files_download_permission_permission() {
  */
 function private_files_download_permission_menu() {
   return array(
-    'admin/config/media/private-files-download-permission/list' => array(
+    'admin/config/media/private-files-download-permission' => array(
       'title'            => 'Private files download permission',
-      'description'      => 'List directories under control.',
+      'description'      => 'Manage per-directory and per-role download permissions.',
       'page callback'    => 'private_files_download_permission_list_directories',
       'access arguments' => array('administer private files download permission'),
       'type'             => MENU_NORMAL_ITEM,
@@ -38,7 +38,7 @@ function private_files_download_permission_menu() {
       'description'      => 'Add directory to the control list.',
       'page callback'    => 'private_files_download_permission_add_directory',
       'access arguments' => array('administer private files download permission'),
-      'type'             => MENU_CALLBACK,
+      'type'             => MENU_LOCAL_ACTION,
     ),
     'admin/config/media/private-files-download-permission/%/edit' => array(
       'title'            => 'Edit directory',
@@ -140,8 +140,6 @@ function private_files_download_permission_list_directories() {
     'sticky'     => FALSE,
     'empty'      => t('The directory list is empty.'),
   ));
-  // Display the 'Add directory' link.
-  $output .= '<p>' . l(t('Add directory'), 'admin/config/media/private-files-download-permission/add') . '</p>';
   // Display output.
   return $output;
 }
@@ -282,7 +280,7 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_get_directory_list');
   // Set form redirection.
-  $form_state['redirect'] = 'admin/config/media/private-files-download-permission/list';
+  $form_state['redirect'] = 'admin/config/media/private-files-download-permission';
 }
 
 /**
@@ -320,7 +318,7 @@ function private_files_download_permission_remove_directory($form, &$form_state,
   return confirm_form(
     $form,
     t('Are you sure you want to remove @path from the control list?', array('@path' => $directory_list[$did]->path)),
-    'admin/config/media/private-files-download-permission/list',
+    'admin/config/media/private-files-download-permission',
     t('This action cannot be undone.'),
     t('Remove directory from the control list'),
     t('Cancel')
@@ -351,7 +349,7 @@ function private_files_download_permission_remove_directory_submit($form, &$form
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_get_directory_list');
   // Set form redirection.
-  $form_state['redirect'] = 'admin/config/media/private-files-download-permission/list';
+  $form_state['redirect'] = 'admin/config/media/private-files-download-permission';
 }
 
 /**

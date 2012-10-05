@@ -19,8 +19,8 @@ INSTALLATION / CONFIGURATION
 ----------------------------
 
 Browse to Configuration > Media > Private files download permission (url:
-/admin/config/media/private-files-download-permission/list). Then add or edit
-each directory path you want to put under control, associating roles which are
+/admin/config/media/private-files-download-permission). Then add or edit each
+directory path you want to put under control, associating roles which are
 allowed to download from it.
 All directory paths are relative to your private filesystem path, but must have
 a leading slash ('/'), since the private filesystem root itself could be put
