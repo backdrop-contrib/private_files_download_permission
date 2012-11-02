@@ -27,6 +27,27 @@ function private_files_download_permission_schema() {
       ),
       'indexes'      => array(),
     ),
+    'private_files_download_permission_directory_user' => array(
+      'description'  => 'Users having per-directory download permission.',
+      'fields'       => array(
+        'duid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+        'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+        'uid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+      ),
+      'primary key'  => array('duid'),
+      'foreign keys' => array(
+        'private_files_download_permission_directory' => array(
+          'table'   => 'private_files_download_permission',
+          'columns' => array('did' => 'did'),
+        ),
+        'private_files_download_permission_directory_user' => array(
+          'table'   => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+      'unique keys'  => array(),
+      'indexes'      => array(),
+    ),
     'private_files_download_permission_directory_role' => array(
       'description'  => 'Roles having per-directory download permission.',
       'fields'       => array(
@@ -58,6 +79,16 @@ function private_files_download_permission_install() {
   $transaction = db_transaction();
   try {
     // Add "real" foreign keys.
+    db_query('ALTER TABLE {private_files_download_permission_directory_user}
+            ADD CONSTRAINT {private_files_download_permission_directory_2}
+            FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE');
+    db_query('ALTER TABLE {private_files_download_permission_directory_user}
+            ADD CONSTRAINT {private_files_download_permission_directory_user}
+            FOREIGN KEY (uid) REFERENCES {users} (uid)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE');
     db_query('ALTER TABLE {private_files_download_permission_directory_role}
             ADD CONSTRAINT {private_files_download_permission_directory}
             FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
@@ -146,6 +177,56 @@ function private_files_download_permission_update_7200() {
 }
 
 /**
+ * Prepare the database for by-user filtering too.
+ */
+function private_files_download_permission_update_7201() {
+  $transaction = db_transaction();
+  try {
+    // Implement new table schema (rewritten from scratch, see https://drupal.org/node/150220).
+    $schema = array();
+    $schema['private_files_download_permission_directory_user'] = array(
+      'private_files_download_permission_directory_user' => array(
+        'description'  => 'Users having per-directory download permission.',
+        'fields'       => array(
+          'duid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+          'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+          'uid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+        ),
+        'primary key'  => array('duid'),
+        'foreign keys' => array(
+          'private_files_download_permission_directory' => array(
+            'table'   => 'private_files_download_permission',
+            'columns' => array('did' => 'did'),
+          ),
+          'private_files_download_permission_directory_user' => array(
+            'table'   => 'users',
+            'columns' => array('uid' => 'uid'),
+          ),
+        ),
+        'unique keys'  => array(),
+        'indexes'      => array(),
+      ),
+    );
+    db_create_table('private_files_download_permission_directory_user', $schema['private_files_download_permission_directory_user']);
+    // Add "real" foreign keys.
+    db_query('ALTER TABLE {private_files_download_permission_directory_user}
+            ADD CONSTRAINT {private_files_download_permission_directory_2}
+            FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE');
+    db_query('ALTER TABLE {private_files_download_permission_directory_user}
+            ADD CONSTRAINT {private_files_download_permission_directory_user}
+            FOREIGN KEY (uid) REFERENCES {users} (uid)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE');
+  }
+  catch (Exception $e) {
+    $transaction->rollback();
+    drupal_set_message(st('An error occurred while updating the module. Please check the log for details.'), 'error');
+  }
+}
+
+/**
  * Implements hook_enable().
  */
 function private_files_download_permission_enable() {
@@ -161,6 +242,10 @@ function private_files_download_permission_uninstall() {
   try {
     if (FALSE !== stripos(db_driver(), 'mysql')) {
       // Remove "real" foreign keys (MySQL database).
+      db_query('ALTER TABLE {private_files_download_permission_directory_user}
+                DROP FOREIGN KEY {private_files_download_permission_directory_2}');
+      db_query('ALTER TABLE {private_files_download_permission_directory_user}
+                DROP FOREIGN KEY {private_files_download_permission_directory_user}');
       db_query('ALTER TABLE {private_files_download_permission_directory_role}
                 DROP FOREIGN KEY {private_files_download_permission_directory}');
       db_query('ALTER TABLE {private_files_download_permission_directory_role}
@@ -168,6 +253,10 @@ function private_files_download_permission_uninstall() {
     }
     else {
       // Remove "real" foreign keys (non-MySQL database).
+      db_query('ALTER TABLE {private_files_download_permission_directory_user}
+                DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_2}');
+      db_query('ALTER TABLE {private_files_download_permission_directory_user}
+                DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_user}');
       db_query('ALTER TABLE {private_files_download_permission_directory_role}
                 DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory}');
       db_query('ALTER TABLE {private_files_download_permission_directory_role}
