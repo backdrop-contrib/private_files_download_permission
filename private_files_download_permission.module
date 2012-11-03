@@ -450,8 +450,11 @@ function private_files_download_permission_file_download($uri) {
       }
     }
   }
-  // Evaluate role permissions and optionally allow access to $uri.
+  // Evaluate user and role permissions and optionally allow access to $uri.
   if (NULL != $best_matching_directory) {
+    if (in_array($user->uid, array_keys($best_matching_directory->uid))) {
+      return array('Content-Type' => file_get_mimetype($uri));
+    }
     foreach ($user->roles as $rid => $role) {
       if (in_array($rid, array_keys($best_matching_directory->rid))) {
         return array('Content-Type' => file_get_mimetype($uri));
