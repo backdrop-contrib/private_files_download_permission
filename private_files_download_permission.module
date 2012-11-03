@@ -290,9 +290,14 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
     // Retrieve form values.
     $did = $form_state['values']['did'];
     $path = $form_state['values']['path'];
+    $users = array();
     $roles = array();
     foreach ($form_state['values'] as $key => $value) {
-      if (0 === strpos($key, 'role_')) {
+      if (0 === strpos($key, 'user_')) {
+        $uid = drupal_substr($key, drupal_strlen('user_'));
+        $users[$uid] = $value;
+      }
+      else if (0 === strpos($key, 'role_')) {
         $rid = drupal_substr($key, drupal_strlen('role_'));
         $roles[$rid] = $value;
       }
@@ -311,6 +316,20 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
     // Retrieve last record id.
     if (NULL === $did) {
       $did = $directory_record['did'];
+    }
+    // Delete old user permissions and write new ones.
+    db_delete('private_files_download_permission_directory_user')
+      ->condition('did', $did)
+      ->execute();
+    foreach ($users as $uid => $value) {
+      if (TRUE == $value) {
+        db_insert('private_files_download_permission_directory_user')
+          ->fields(array(
+            'did' => $did,
+            'uid' => $uid,
+            ))
+          ->execute();
+      }
     }
     // Delete old role permissions and write new ones.
     db_delete('private_files_download_permission_directory_role')
