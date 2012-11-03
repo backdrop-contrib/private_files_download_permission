@@ -297,7 +297,7 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
         $uid = drupal_substr($key, drupal_strlen('user_'));
         $users[$uid] = $value;
       }
-      else if (0 === strpos($key, 'role_')) {
+      elseif (0 === strpos($key, 'role_')) {
         $rid = drupal_substr($key, drupal_strlen('role_'));
         $roles[$rid] = $value;
       }
