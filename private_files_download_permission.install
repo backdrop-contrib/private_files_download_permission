@@ -80,25 +80,25 @@ function private_files_download_permission_install() {
   try {
     // Add "real" foreign keys.
     db_query('ALTER TABLE {private_files_download_permission_directory_user}
-            ADD CONSTRAINT {private_files_download_permission_directory_2}
-            FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE');
+      ADD CONSTRAINT {private_files_download_permission_directory_2}
+      FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE');
     db_query('ALTER TABLE {private_files_download_permission_directory_user}
-            ADD CONSTRAINT {private_files_download_permission_directory_user}
-            FOREIGN KEY (uid) REFERENCES {users} (uid)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE');
+      ADD CONSTRAINT {private_files_download_permission_directory_user}
+      FOREIGN KEY (uid) REFERENCES {users} (uid)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE');
     db_query('ALTER TABLE {private_files_download_permission_directory_role}
-            ADD CONSTRAINT {private_files_download_permission_directory}
-            FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE');
+      ADD CONSTRAINT {private_files_download_permission_directory}
+      FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE');
     db_query('ALTER TABLE {private_files_download_permission_directory_role}
-            ADD CONSTRAINT {private_files_download_permission_directory_role}
-            FOREIGN KEY (rid) REFERENCES {role} (rid)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE');
+      ADD CONSTRAINT {private_files_download_permission_directory_role}
+      FOREIGN KEY (rid) REFERENCES {role} (rid)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE');
   }
   catch (Exception $e) {
     $transaction->rollback();
@@ -160,15 +160,15 @@ function private_files_download_permission_update_7200() {
     db_create_table('private_files_download_permission_directory_role', $schema['private_files_download_permission_directory_role']);
     // Add "real" foreign keys.
     db_query('ALTER TABLE {private_files_download_permission_directory_role}
-              ADD CONSTRAINT {private_files_download_permission_directory}
-              FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
-              ON DELETE CASCADE
-              ON UPDATE CASCADE');
+      ADD CONSTRAINT {private_files_download_permission_directory}
+      FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE');
     db_query('ALTER TABLE {private_files_download_permission_directory_role}
-              ADD CONSTRAINT {private_files_download_permission_directory_role}
-              FOREIGN KEY (rid) REFERENCES {role} (rid)
-              ON DELETE CASCADE
-              ON UPDATE CASCADE');
+      ADD CONSTRAINT {private_files_download_permission_directory_role}
+      FOREIGN KEY (rid) REFERENCES {role} (rid)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE');
   }
   catch (Exception $e) {
     $transaction->rollback();
@@ -210,15 +210,15 @@ function private_files_download_permission_update_7201() {
     db_create_table('private_files_download_permission_directory_user', $schema['private_files_download_permission_directory_user']);
     // Add "real" foreign keys.
     db_query('ALTER TABLE {private_files_download_permission_directory_user}
-            ADD CONSTRAINT {private_files_download_permission_directory_2}
-            FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE');
+      ADD CONSTRAINT {private_files_download_permission_directory_2}
+      FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE');
     db_query('ALTER TABLE {private_files_download_permission_directory_user}
-            ADD CONSTRAINT {private_files_download_permission_directory_user}
-            FOREIGN KEY (uid) REFERENCES {users} (uid)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE');
+      ADD CONSTRAINT {private_files_download_permission_directory_user}
+      FOREIGN KEY (uid) REFERENCES {users} (uid)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE');
   }
   catch (Exception $e) {
     $transaction->rollback();
@@ -243,24 +243,24 @@ function private_files_download_permission_uninstall() {
     if (FALSE !== stripos(db_driver(), 'mysql')) {
       // Remove "real" foreign keys (MySQL database).
       db_query('ALTER TABLE {private_files_download_permission_directory_user}
-                DROP FOREIGN KEY {private_files_download_permission_directory_2}');
+        DROP FOREIGN KEY {private_files_download_permission_directory_2}');
       db_query('ALTER TABLE {private_files_download_permission_directory_user}
-                DROP FOREIGN KEY {private_files_download_permission_directory_user}');
+        DROP FOREIGN KEY {private_files_download_permission_directory_user}');
       db_query('ALTER TABLE {private_files_download_permission_directory_role}
-                DROP FOREIGN KEY {private_files_download_permission_directory}');
+        DROP FOREIGN KEY {private_files_download_permission_directory}');
       db_query('ALTER TABLE {private_files_download_permission_directory_role}
-                DROP FOREIGN KEY {private_files_download_permission_directory_role}');
+        DROP FOREIGN KEY {private_files_download_permission_directory_role}');
     }
     else {
       // Remove "real" foreign keys (non-MySQL database).
       db_query('ALTER TABLE {private_files_download_permission_directory_user}
-                DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_2}');
+        DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_2}');
       db_query('ALTER TABLE {private_files_download_permission_directory_user}
-                DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_user}');
+        DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_user}');
       db_query('ALTER TABLE {private_files_download_permission_directory_role}
-                DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory}');
+        DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory}');
       db_query('ALTER TABLE {private_files_download_permission_directory_role}
-                DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_role}');
+        DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_role}');
     }
   }
   catch (Exception $e) {
