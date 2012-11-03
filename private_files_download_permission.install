@@ -37,7 +37,7 @@ function private_files_download_permission_schema() {
       'primary key'  => array('duid'),
       'foreign keys' => array(
         'private_files_download_permission_directory' => array(
-          'table'   => 'private_files_download_permission',
+          'table'   => 'private_files_download_permission_directory',
           'columns' => array('did' => 'did'),
         ),
         'private_files_download_permission_directory_user' => array(
@@ -58,7 +58,7 @@ function private_files_download_permission_schema() {
       'primary key'  => array('drid'),
       'foreign keys' => array(
         'private_files_download_permission_directory' => array(
-          'table'   => 'private_files_download_permission',
+          'table'   => 'private_files_download_permission_directory',
           'columns' => array('did' => 'did'),
         ),
         'private_files_download_permission_directory_role' => array(
@@ -145,7 +145,7 @@ function private_files_download_permission_update_7200() {
       'primary key'  => array('drid'),
       'foreign keys' => array(
         'private_files_download_permission_directory' => array(
-          'table'   => 'private_files_download_permission',
+          'table'   => 'private_files_download_permission_directory',
           'columns' => array('did' => 'did'),
         ),
         'private_files_download_permission_directory_role' => array(
@@ -185,27 +185,25 @@ function private_files_download_permission_update_7201() {
     // Implement new table schema (rewritten from scratch, see https://drupal.org/node/150220).
     $schema = array();
     $schema['private_files_download_permission_directory_user'] = array(
-      'private_files_download_permission_directory_user' => array(
-        'description'  => 'Users having per-directory download permission.',
-        'fields'       => array(
-          'duid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-          'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-          'uid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-        ),
-        'primary key'  => array('duid'),
-        'foreign keys' => array(
-          'private_files_download_permission_directory' => array(
-            'table'   => 'private_files_download_permission',
-            'columns' => array('did' => 'did'),
-          ),
-          'private_files_download_permission_directory_user' => array(
-            'table'   => 'users',
-            'columns' => array('uid' => 'uid'),
-          ),
-        ),
-        'unique keys'  => array(),
-        'indexes'      => array(),
+      'description'  => 'Users having per-directory download permission.',
+      'fields'       => array(
+        'duid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+        'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
+        'uid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
       ),
+      'primary key'  => array('duid'),
+      'foreign keys' => array(
+        'private_files_download_permission_directory' => array(
+          'table'   => 'private_files_download_permission_directory',
+          'columns' => array('did' => 'did'),
+        ),
+        'private_files_download_permission_directory_user' => array(
+          'table'   => 'users',
+          'columns' => array('uid' => 'uid'),
+        ),
+      ),
+      'unique keys'  => array(),
+      'indexes'      => array(),
     );
     db_create_table('private_files_download_permission_directory_user', $schema['private_files_download_permission_directory_user']);
     // Add "real" foreign keys.
