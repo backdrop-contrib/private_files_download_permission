@@ -60,6 +60,20 @@ function private_files_download_permission_menu() {
 }
 
 /**
+ * Returns a standard array containing all users.
+ */
+function private_files_download_permission_get_users() {
+  // Load users as entity array.
+  $users_2 = entity_load('user');
+  // Return a standard (uid, name) array.
+  $users = array();
+  foreach ($users_2 as $uid => $user_object) {
+    $users[$uid] = (!$user_object->name ? t('anonymous user') : $user_object->name);
+  }
+  return $users;
+}
+
+/**
  * Returns the list of all directories under control.
  */
 function private_files_download_permission_get_directory_list() {
@@ -122,24 +136,20 @@ function private_files_download_permission_list_directories() {
   }
   // Retrieve directory list and display it as a table.
   $directory_list = private_files_download_permission_get_directory_list();
-  $users = entity_load('user');
+  $users = private_files_download_permission_get_users();
   $roles = user_roles();
   $rows = array();
   foreach ($directory_list as $directory) {
     // Prepare the 'Enabled users' cell.
     $enabled_users = array_intersect_key($users, $directory->uid);
-    $enabled_users_2 = array();
-    foreach ($enabled_users as $uid => $user_object) {
-      $enabled_users_2[$uid] = (!$user_object->name ? t('anonymous user') : $user_object->name);
-    }
-    sort($enabled_users_2);
+    sort($enabled_users);
     // Prepare the 'Enabled roles' cell.
     $enabled_roles = array_intersect_key($roles, $directory->rid);
     sort($enabled_roles);
     // Fill table row.
     $rows[] = array(
       $directory->path,
-      !empty($enabled_users_2) ? implode(', ', $enabled_users_2) : '',
+      !empty($enabled_users) ? implode(', ', $enabled_users) : '',
       !empty($enabled_roles) ? implode(', ', $enabled_roles) : '',
       l(t('Edit'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/edit/'),
       l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/remove/'),
@@ -181,9 +191,11 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   }
   // Prepare default values.
   $default_path = NULL;
+  $default_users = array();
   $default_roles = array();
   if (NULL !== $did) {
     $default_path = $directory_list[$did]->path;
+    $default_users = array_keys($directory_list[$did]->uid);
     $default_roles = array_keys($directory_list[$did]->rid);
   }
   // Prepare the directory id value to be eventually submitted.
@@ -201,6 +213,22 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#required'      => TRUE,
     '#default_value' => $default_path,
   );
+  // Prepare the user checkbox fieldset.
+  $form['users'] = array(
+    '#type'  => 'fieldset',
+    '#title' => t('Enabled users'),
+  );
+  // Prepare user checkboxes.
+  $users = array_flip(private_files_download_permission_get_users());
+  ksort($users);
+  $users = array_flip($users);
+  foreach ($users as $uid => $user) {
+    $form['users']['user_' . $uid] = array(
+      '#type'          => 'checkbox',
+      '#title'         => check_plain($user),
+      '#default_value' => in_array($uid, $default_users),
+    );
+  }
   // Prepare the role checkbox fieldset.
   $form['roles'] = array(
     '#type'  => 'fieldset',
