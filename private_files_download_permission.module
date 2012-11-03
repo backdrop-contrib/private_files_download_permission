@@ -410,7 +410,15 @@ function private_files_download_permission_remove_directory_submit($form, &$form
       drupal_set_message(t('You need to provide a valid directory id.'), 'error');
       return;
     }
-    // Remove the associated directory.
+    // Remove users associated to the directory.
+    db_delete('private_files_download_permission_directory_user')
+      ->condition('did', $form_state['values']['did'])
+      ->execute();
+    // Remove roles associated to the directory.
+    db_delete('private_files_download_permission_directory_role')
+      ->condition('did', $form_state['values']['did'])
+      ->execute();
+    // Remove the directory itself.
     db_delete('private_files_download_permission_directory')
       ->condition('did', $form_state['values']['did'])
       ->execute();
