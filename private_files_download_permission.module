@@ -149,8 +149,8 @@ function private_files_download_permission_list_directories() {
     // Fill table row.
     $rows[] = array(
       $directory->path,
-      !empty($enabled_users) ? implode(', ', $enabled_users) : '',
-      !empty($enabled_roles) ? implode(', ', $enabled_roles) : '',
+      !empty($enabled_users) ? implode('<br />', $enabled_users) : '',
+      !empty($enabled_roles) ? implode('<br />', $enabled_roles) : '',
       l(t('Edit'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/edit/'),
       l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/remove/'),
     );
