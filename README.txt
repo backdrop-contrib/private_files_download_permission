@@ -23,15 +23,15 @@ Browse to Configuration > Media > Private files download permission (url:
 /admin/config/media/private-files-download-permission). Then add or edit each
 directory path you want to put under control, associating users and roles which
 are allowed to download from it.
-All directory paths are relative to your private file system path, but must have
-a leading slash ('/'), since the private file system root itself could be put
+All directory paths are relative to your private file system path, but must
+have a leading slash ('/'), as the private file system root itself could be put
 under control.
 
-Example.
+E.g.:
 Suppose your private file system path is /opt/private.
 You could configure /opt/private (and all its subdirectories) by adding a '/'
-entry, while a '/test' item would specifically refer to /opt/private/test (and
-all its subdirectories).
+entry, while a '/test' entry would specifically refer to /opt/private/test (and
+all of its subdirectories).
 
 Also configure which roles have access to the module configuration under
 People > Permissions (url: /admin/people/permissions).
