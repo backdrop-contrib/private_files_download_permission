@@ -71,10 +71,17 @@ function private_files_download_permission_get_directory_list() {
       ->orderBy('t.path', 'ASC')
       ->execute()
       ->fetchAllAssoc('did');
-    // Add role id array to each directory.
+    // Add user id and role id arrays to each directory.
     foreach ($directory_list as $directory) {
+      $directory->uid = array();
       $directory->rid = array();
     }
+    // Load directory user list.
+    $directory_users = db_select('private_files_download_permission_directory_user', 't')
+      ->fields('t')
+      ->orderBy('t.did', 'ASC')
+      ->execute()
+      ->fetchAll();
     // Load directory role list.
     $directory_roles = db_select('private_files_download_permission_directory_role', 't')
       ->fields('t')
@@ -82,6 +89,11 @@ function private_files_download_permission_get_directory_list() {
       ->execute()
       ->fetchAll();
     // Merge array values.
+    foreach ($directory_users as $directory_user) {
+      $did = $directory_user->did;
+      $uid = $directory_user->uid;
+      $directory_list[$did]->uid[$uid] = array('uid' => $uid);
+    }
     foreach ($directory_roles as $directory_role) {
       $did = $directory_role->did;
       $rid = $directory_role->rid;
@@ -110,15 +122,24 @@ function private_files_download_permission_list_directories() {
   }
   // Retrieve directory list and display it as a table.
   $directory_list = private_files_download_permission_get_directory_list();
+  $users = entity_load('user');
   $roles = user_roles();
   $rows = array();
   foreach ($directory_list as $directory) {
+    // Prepare the 'Enabled users' cell.
+    $enabled_users = array_intersect_key($users, $directory->uid);
+    $enabled_users_2 = array();
+    foreach ($enabled_users as $uid => $user_object) {
+      $enabled_users_2[$uid] = (!$user_object->name ? t('anonymous user') : $user_object->name);
+    }
+    sort($enabled_users_2);
     // Prepare the 'Enabled roles' cell.
     $enabled_roles = array_intersect_key($roles, $directory->rid);
     sort($enabled_roles);
     // Fill table row.
     $rows[] = array(
       $directory->path,
+      !empty($enabled_users_2) ? implode(', ', $enabled_users_2) : '',
       !empty($enabled_roles) ? implode(', ', $enabled_roles) : '',
       l(t('Edit'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/edit/'),
       l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/remove/'),
@@ -127,6 +148,7 @@ function private_files_download_permission_list_directories() {
   $output .= theme_table(array(
     'header' => array(
       t('Directory path'),
+      t('Enabled users'),
       t('Enabled roles'),
       array(
         'data'    => t('Operations'),
