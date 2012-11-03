@@ -98,7 +98,7 @@ function private_files_download_permission_list_directories() {
   $output = '';
   // Check if file system download method is set to private.
   if ('private' !== file_default_scheme()) {
-    drupal_set_message(t('You need to !set_your_file_system_download_method to private.', array('!set_your_file_system_download_method' => l(t('set your file system download method'), 'admin/config/media/file-system'))), 'error');
+    drupal_set_message(t('Your !default_download_method is not set as private. Please keep in mind that these settings only affect private file system downloads.', array('!default_download_method' => l(t('default download method'), 'admin/config/media/file-system'))), 'warning');
   }
   // Display the private file system path.
   $private_path = variable_get('file_private_path');
