@@ -177,7 +177,7 @@ function private_files_download_permission_update_7200() {
 }
 
 /**
- * Prepare the database for by-user filtering too.
+ * Prepare the database for by-user filtering.
  */
 function private_files_download_permission_update_7201() {
   $transaction = db_transaction();
