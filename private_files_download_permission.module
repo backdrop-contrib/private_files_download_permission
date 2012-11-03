@@ -173,6 +173,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   $form['path'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Path'),
+    '#field_prefix'  => variable_get('file_private_path'),
     '#size'          => 60,
     '#maxlength'     => 255,
     '#required'      => TRUE,
