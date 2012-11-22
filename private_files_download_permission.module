@@ -67,12 +67,26 @@ function private_files_download_permission_menu() {
  * Returns a standard array containing all users.
  */
 function private_files_download_permission_get_users() {
+/*
   // Load users as entity array.
   $users_2 = entity_load('user');
   // Return a standard (uid, name) array.
   $users = array();
   foreach ($users_2 as $uid => $user_object) {
     $users[$uid] = (!$user_object->name ? t('anonymous user') : $user_object->name);
+  }
+  return $users;
+*/
+  // Load user list from database.
+  $user_list = db_select('users', 't')
+    ->fields('t')
+    ->orderBy('t.name', 'ASC')
+    ->execute()
+    ->fetchAllAssoc('uid');
+  // Return a standard (uid, name) array.
+  $users = array();
+  foreach ($user_list as $uid => $user) {
+    $users[$uid] = (!$user->name ? t('anonymous user') : $user->name);
   }
   return $users;
 }
