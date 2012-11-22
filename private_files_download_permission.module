@@ -14,6 +14,10 @@
  */
 function private_files_download_permission_permission() {
   return array(
+    'bypass private files download permission' => array(
+      'title'       => t('Bypass Private files download permission'),
+      'description' => t('Download from private directories regardless of permission restrictions.'),
+    ),
     'administer private files download permission' => array(
       'title'       => t('Administer Private files download permission'),
       'description' => t('Access module configuration.'),
@@ -438,34 +442,40 @@ function private_files_download_permission_remove_directory_submit($form, &$form
  */
 function private_files_download_permission_file_download($uri) {
   global $user;
-  // Extract the path from $uri, removing the protocol prefix and the file name.
-  $uri_path = explode('/', $uri);
-  array_shift($uri_path);
-  array_shift($uri_path);
-  array_pop($uri_path);
-  // Add a leading slash to $uri_path.
-  $uri_path = '/' . implode('/', $uri_path);
-  // Find the directory which best matches $uri_path.
-  $best_matching_length = 0;
-  $best_matching_directory = NULL;
-  foreach (private_files_download_permission_get_directory_list() as $directory) {
-    // Search for the best matching substring.
-    $directory_path = $directory->path;
-    if (0 === stripos($uri_path, $directory_path)) {
-      if (drupal_strlen($directory_path) > $best_matching_length) {
-        $best_matching_length = drupal_strlen($directory_path);
-        $best_matching_directory = $directory;
+  // Check if user may bypass permission restrictions.
+  if (user_access('bypass private files download permission')) {
+    return array('Content-Type' => file_get_mimetype($uri));
+  }
+  else {
+    // Extract the path from $uri, removing the protocol prefix and the file name.
+    $uri_path = explode('/', $uri);
+    array_shift($uri_path);
+    array_shift($uri_path);
+    array_pop($uri_path);
+    // Add a leading slash to $uri_path.
+    $uri_path = '/' . implode('/', $uri_path);
+    // Find the directory which best matches $uri_path.
+    $best_matching_length = 0;
+    $best_matching_directory = NULL;
+    foreach (private_files_download_permission_get_directory_list() as $directory) {
+      // Search for the best matching substring.
+      $directory_path = $directory->path;
+      if (0 === stripos($uri_path, $directory_path)) {
+        if (drupal_strlen($directory_path) > $best_matching_length) {
+          $best_matching_length = drupal_strlen($directory_path);
+          $best_matching_directory = $directory;
+        }
       }
     }
-  }
-  // Evaluate user and role permissions and optionally allow access to $uri.
-  if (NULL != $best_matching_directory) {
-    if (in_array($user->uid, array_keys($best_matching_directory->uid))) {
-      return array('Content-Type' => file_get_mimetype($uri));
-    }
-    foreach ($user->roles as $rid => $role) {
-      if (in_array($rid, array_keys($best_matching_directory->rid))) {
+    // Evaluate user and role permissions and optionally allow access to $uri.
+    if (NULL != $best_matching_directory) {
+      if (in_array($user->uid, array_keys($best_matching_directory->uid))) {
         return array('Content-Type' => file_get_mimetype($uri));
+      }
+      foreach ($user->roles as $rid => $role) {
+        if (in_array($rid, array_keys($best_matching_directory->rid))) {
+          return array('Content-Type' => file_get_mimetype($uri));
+        }
       }
     }
   }
