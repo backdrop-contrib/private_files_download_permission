@@ -226,7 +226,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     $form['users']['user_' . $uid] = array(
       '#type'          => 'checkbox',
       '#title'         => check_plain($user),
-      '#default_value' => in_array($uid, $default_users),
+      '#default_value' => ((NULL === $did) && (1 === $uid) ? TRUE : in_array($uid, $default_users)),
     );
   }
   // Prepare the role checkbox fieldset.
