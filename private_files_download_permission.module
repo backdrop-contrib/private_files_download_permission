@@ -223,8 +223,10 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   );
   // Prepare the user checkbox fieldset.
   $form['users'] = array(
-    '#type'  => 'fieldset',
-    '#title' => t('Enabled users'),
+    '#type'        => 'fieldset',
+    '#title'       => t('Enabled users'),
+    '#collapsible' => TRUE,
+    '#collapsed'   => TRUE,
   );
   // Prepare user checkboxes.
   $users = array_flip(private_files_download_permission_get_users());
@@ -239,8 +241,10 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   }
   // Prepare the role checkbox fieldset.
   $form['roles'] = array(
-    '#type'  => 'fieldset',
-    '#title' => t('Enabled roles'),
+    '#type'        => 'fieldset',
+    '#title'       => t('Enabled roles'),
+    '#collapsible' => TRUE,
+    '#collapsed'   => TRUE,
   );
   // Prepare role checkboxes.
   $roles = array_flip(user_roles());
