@@ -163,7 +163,7 @@ function private_files_download_permission_list_directories() {
       l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/remove/'),
     );
   }
-  $output .= theme_table(array(
+  $output .= theme('table', array(
     'header' => array(
       t('Directory path'),
       t('Enabled users'),
