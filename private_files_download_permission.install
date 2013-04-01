@@ -104,6 +104,8 @@ function private_files_download_permission_install() {
     $transaction->rollback();
     drupal_set_message(st('An error occurred while installing the module. Please check the log for details.'), 'error');
   }
+  // Set preferences' default values.
+  variable_set('private_files_download_permission_per_user_checks', TRUE);
 }
 
 /**
@@ -225,6 +227,14 @@ function private_files_download_permission_update_7201() {
 }
 
 /**
+ * Set preferences' default values.
+ */
+function private_files_download_permission_update_7203() {
+  // Set preferences' default values.
+  variable_set('private_files_download_permission_per_user_checks', TRUE);
+}
+
+/**
  * Implements hook_enable().
  */
 function private_files_download_permission_enable() {
@@ -265,6 +275,8 @@ function private_files_download_permission_uninstall() {
     $transaction->rollback();
     drupal_set_message(st('An error occurred while removing the module. Please check the log for details.'), 'error');
   }
+  // Remove preferences.
+  variable_del('private_files_download_permission_per_user_checks');
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_directory_list');
 }

@@ -34,5 +34,11 @@ You could configure /opt/private (and all of its subdirectories) by adding a
 '/' entry, while a '/test' entry would specifically refer to /opt/private/test
 (and all of its subdirectories).
 
+Please note that per-user checks may slow your site if there are plenty of
+users. You can then bypass this feature by browsing to Configuration > Media >
+Private files download permission > Preferences (url:
+/admin/config/media/private-files-download-permission/preferences) and change
+the setting accordingly.
+
 Also configure which users and roles have access to the module configuration
 under People > Permissions (url: /admin/people/permissions).
