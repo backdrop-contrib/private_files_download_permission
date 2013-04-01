@@ -191,7 +191,7 @@ function private_files_download_permission_list_directories() {
       t('Enabled users'),
       t('Enabled roles'),
       array(
-        'data'    => t('Operations'),
+        'data'    => t('Actions'),
         'colspan' => 2,
       ),
     ),
