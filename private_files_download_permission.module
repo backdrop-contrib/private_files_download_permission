@@ -57,7 +57,7 @@ function private_files_download_permission_menu() {
       'page callback'    => 'private_files_download_permission_edit_directory',
       'page arguments'   => array(4),
       'access arguments' => array('administer private files download permission'),
-      'type'             => MENU_CALLBACK,
+      'type'             => MENU_NORMAL_ITEM,
     ),
     'admin/config/media/private-files-download-permission/%/remove' => array(
       'title'            => 'Remove directory',
