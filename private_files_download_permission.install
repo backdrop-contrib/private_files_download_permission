@@ -17,8 +17,9 @@ function private_files_download_permission_schema() {
     'private_files_download_permission_directory' => array(
       'description'  => 'Directories whose permissions are set.',
       'fields'       => array(
-        'did'  => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-        'path' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+        'did'    => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
+        'path'   => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
+        'bypass' => array('type' => 'int', 'size' => 'tiny', 'not null' => TRUE),
       ),
       'primary key'  => array('did'),
       'foreign keys' => array(),
@@ -227,9 +228,12 @@ function private_files_download_permission_update_7201() {
 }
 
 /**
- * Set preferences' default values.
+ * Prepare the database to handle the "bypass" option. Set preferences' default
+ * values.
  */
 function private_files_download_permission_update_7203() {
+  // Update table schema.
+  db_add_field('private_files_download_permission_directory', 'bypass', array('type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'initial' => 0));
   // Set preferences' default values.
   variable_set('private_files_download_permission_per_user_checks', TRUE);
 }
