@@ -522,6 +522,8 @@ function private_files_download_permission_get_preferences_form_submit($form, &$
   variable_set('private_files_download_permission_by_user_checks', $form_state['values']['private_files_download_permission_by_user_checks']);
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_get_directory_list');
+  // Display message.
+  drupal_set_message(t('Your preferences have been successfully saved.'), 'status');
 }
 
 /**
