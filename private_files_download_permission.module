@@ -32,7 +32,7 @@ function private_files_download_permission_menu() {
   return array(
     'admin/config/media/private-files-download-permission' => array(
       'title'            => 'Private files download permission',
-      'description'      => 'Manage per-directory and per-role download permissions.',
+      'description'      => 'Manage by-directory, by-role and by-user download permissions.',
       'page callback'    => 'private_files_download_permission_list_directories',
       'access arguments' => array('administer private files download permission'),
       'type'             => MENU_NORMAL_ITEM,
