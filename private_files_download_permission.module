@@ -18,6 +18,10 @@ function private_files_download_permission_permission() {
       'title'       => t('Bypass Private files download permission'),
       'description' => t('Download from private directories regardless of permission restrictions.'),
     ),
+    'bypass private files download permission for temporary files' => array(
+      'title'       => t('Bypass Private files download permission for temporary files'),
+      'description' => t('Download temporary files regardless of permission restrictions.'),
+    ),
     'administer private files download permission' => array(
       'title'       => t('Administer Private files download permission'),
       'description' => t('Access module configuration.'),
@@ -542,6 +546,10 @@ function private_files_download_permission_file_download($uri) {
   if (user_access('bypass private files download permission')) {
     return array('Content-Type' => file_get_mimetype($uri));
   }
+  else if ((user_access('bypass private files download permission for temporary files')) && ('temporary://' === substr($uri, 0, 12))) {
+    return array('Content-Type' => file_get_mimetype($uri));
+  }
+  // If not, do all the specific checks.
   else {
     // Extract the path from $uri, removing the protocol prefix and the file name.
     $uri_path = explode('/', $uri);
