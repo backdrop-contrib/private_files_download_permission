@@ -413,7 +413,7 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
   }
   catch (Exception $e) {
     $transaction->rollback();
-    drupal_set_message(t('An error occurred while saving directory to the control list. Please check the log for details.'), 'error');
+    drupal_set_message(t('An error occurred while saving directory to the control list. Possible duplication? Please check the log for details.'), 'error');
   }
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_get_directory_list');
