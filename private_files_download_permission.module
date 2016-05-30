@@ -175,11 +175,11 @@ function private_files_download_permission_list_directories() {
     // Prepare the 'Enabled users' cell.
     if (variable_get('private_files_download_permission_by_user_checks')) {
       $enabled_users = array_intersect_key($users, $directory->uid);
-      sort($enabled_users);
+      natcasesort($enabled_users);
     }
     // Prepare the 'Enabled roles' cell.
     $enabled_roles = array_intersect_key($roles, $directory->rid);
-    sort($enabled_roles);
+    natcasesort($enabled_roles);
     // Fill table row.
     $rows[] = array(
       $directory->path,
@@ -274,7 +274,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   // Prepare user checkboxes.
   if (variable_get('private_files_download_permission_by_user_checks')) {
     $users = array_flip(private_files_download_permission_get_users());
-    ksort($users);
+    ksort($users, SORT_NATURAL | SORT_FLAG_CASE);
     $users = array_flip($users);
     foreach ($users as $uid => $user) {
       $form['users']['user_' . $uid] = array(
@@ -293,7 +293,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   );
   // Prepare role checkboxes.
   $roles = array_flip(user_roles());
-  ksort($roles);
+  ksort($roles, SORT_NATURAL | SORT_FLAG_CASE);
   $roles = array_flip($roles);
   foreach ($roles as $rid => $role) {
     $form['roles']['role_' . $rid] = array(
