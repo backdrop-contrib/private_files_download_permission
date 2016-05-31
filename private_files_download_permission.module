@@ -579,16 +579,12 @@ function private_files_download_permission_file_download($uri) {
       // Evaluate user and role permissions and optionally allow access to $uri.
       if (variable_get('private_files_download_permission_by_user_checks')) {
         if (in_array($user->uid, array_keys($best_matching_directory->uid))) {
-          $files = file_load_multiple(array(), array('uri' => $uri));
-          $file = reset($files);
-          return file_transfer($uri, file_get_content_headers($file));
+          return array('Content-Type' => file_get_mimetype($uri));
         }
       }
       foreach ($user->roles as $rid => $role) {
         if (in_array($rid, array_keys($best_matching_directory->rid))) {
-          $files = file_load_multiple(array(), array('uri' => $uri));
-          $file = reset($files);
-          return file_transfer($uri, file_get_content_headers($file));
+          return array('Content-Type' => file_get_mimetype($uri));
         }
       }
     }
