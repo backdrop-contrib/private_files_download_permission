@@ -544,9 +544,11 @@ function private_files_download_permission_file_download($uri) {
   global $user;
   // Check if user may bypass permission restrictions.
   if (user_access('bypass private files download permission')) {
+    watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . $user->name . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
     return array('Content-Type' => file_get_mimetype($uri));
   }
   else if ((user_access('bypass private files download permission for temporary files')) && ('temporary://' === substr($uri, 0, 12))) {
+    watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . $user->name . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
     return array('Content-Type' => file_get_mimetype($uri));
   }
   // If not, do all the specific checks.
@@ -579,16 +581,19 @@ function private_files_download_permission_file_download($uri) {
       // Evaluate user and role permissions and optionally allow access to $uri.
       if (variable_get('private_files_download_permission_by_user_checks')) {
         if (in_array($user->uid, array_keys($best_matching_directory->uid))) {
+          watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . $user->name . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
           return array('Content-Type' => file_get_mimetype($uri));
         }
       }
       foreach ($user->roles as $rid => $role) {
         if (in_array($rid, array_keys($best_matching_directory->rid))) {
+          watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . $user->name . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
           return array('Content-Type' => file_get_mimetype($uri));
         }
       }
     }
   }
   // By default, deny access.
+  watchdog('private_files_download_permission', 'User %user denied permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . $user->name . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
   return -1;
 }
