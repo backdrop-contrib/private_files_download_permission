@@ -184,7 +184,7 @@ function private_files_download_permission_list_directories() {
     $rows[] = array(
       $directory->path,
       $directory->bypass ? t('Yes') : '',
-      variable_get('private_files_download_permission_by_user_checks') && !empty($enabled_users) && !$directory->bypass ? implode('<br />', $enabled_users) : '',
+      ( $directory->grant_file_owners ? t('File owners') . '<br />' : '' ) . ( variable_get('private_files_download_permission_by_user_checks') && !empty($enabled_users) && !$directory->bypass ? implode('<br />', $enabled_users) : '' ),
       !empty($enabled_roles) && !$directory->bypass ? implode('<br />', $enabled_roles) : '',
       l(t('Edit'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/edit/'),
       l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/remove/'),
@@ -228,6 +228,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   // Prepare default values.
   $default_path = NULL;
   $default_bypass = FALSE;
+  $default_grant_file_owners = FALSE;
   if (variable_get('private_files_download_permission_by_user_checks')) {
     $default_users = array();
   }
@@ -235,6 +236,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   if (NULL !== $did) {
     $default_path = $directory_list[$did]->path;
     $default_bypass = $directory_list[$did]->bypass;
+    $default_grant_file_owners = $directory_list[$did]->grant_file_owners;
     if (variable_get('private_files_download_permission_by_user_checks')) {
       $default_users = array_keys($directory_list[$did]->uid);
     }
@@ -261,6 +263,13 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#title'         => t('Bypass'),
     '#default_value' => $default_bypass,
     '#description'   => t('Enable to make this module ignore the above path.'),
+  );
+  // Prepare the grant file owners checkbox.
+  $form['grant_file_owners'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Grant file owners'),
+    '#default_value' => $default_grant_file_owners,
+    '#description'   => t('Grant access to users who uploaded the files (i.e.: the file owners).'),
   );
   // Prepare the user checkbox fieldset.
   if (variable_get('private_files_download_permission_by_user_checks')) {
@@ -348,6 +357,7 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
     $did = $form_state['values']['did'];
     $path = $form_state['values']['path'];
     $bypass = $form_state['values']['bypass'];
+    $grant_file_owners = $form_state['values']['grant_file_owners'];
     if (variable_get('private_files_download_permission_by_user_checks')) {
       $users = array();
     }
@@ -369,6 +379,7 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
       'did'    => $did,
       'path'   => $path,
       'bypass' => $bypass,
+      'grant_file_owners'  => $grant_file_owners,
     );
     if (NULL === $did) {
       drupal_write_record('private_files_download_permission_directory', $directory_record);
@@ -577,6 +588,14 @@ function private_files_download_permission_file_download($uri) {
       // Check if this module should ignore the call.
       if ($best_matching_directory->bypass) {
         return NULL;
+      }
+      // Check if the file owner is allowed to access $uri.
+      if ($best_matching_directory->grant_file_owners) {
+        $file_uid = db_query('SELECT f.uid FROM {file_managed} f WHERE f.uri = :uri', array(':uri' => $uri))->fetchField();
+        if ($file_uid && ($file_uid == $user->uid)) {
+          watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . $user->name . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+          return array('Content-Type' => file_get_mimetype($uri));
+        }
       }
       // Evaluate user and role permissions and optionally allow access to $uri.
       if (variable_get('private_files_download_permission_by_user_checks')) {
