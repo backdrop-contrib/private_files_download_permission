@@ -556,11 +556,11 @@ function private_files_download_permission_file_download($uri) {
   // Check if user may bypass permission restrictions.
   if (user_access('bypass private files download permission')) {
     watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
-    return array('Content-Type' => file_get_mimetype($uri));
+    return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
   }
   else if ((user_access('bypass private files download permission for temporary files')) && ('temporary://' === substr($uri, 0, 12))) {
     watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
-    return array('Content-Type' => file_get_mimetype($uri));
+    return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
   }
   // If not, do all the specific checks.
   else {
@@ -594,20 +594,20 @@ function private_files_download_permission_file_download($uri) {
         $file_uid = db_query('SELECT f.uid FROM {file_managed} f WHERE f.uri = :uri', array(':uri' => $uri))->fetchField();
         if ($file_uid && ($file_uid == $user->uid)) {
           watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
-          return array('Content-Type' => file_get_mimetype($uri));
+          return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
         }
       }
       // Evaluate user and role permissions and optionally allow access to $uri.
       if (variable_get('private_files_download_permission_by_user_checks')) {
         if (in_array($user->uid, array_keys($best_matching_directory->uid))) {
           watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
-          return array('Content-Type' => file_get_mimetype($uri));
+          return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
         }
       }
       foreach ($user->roles as $rid => $role) {
         if (in_array($rid, array_keys($best_matching_directory->rid))) {
           watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
-          return array('Content-Type' => file_get_mimetype($uri));
+          return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
         }
       }
     }
