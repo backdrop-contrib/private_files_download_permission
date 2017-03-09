@@ -520,6 +520,12 @@ function private_files_download_permission_get_preferences_form($form, &$form_st
     '#default_value' => variable_get('private_files_download_permission_by_user_checks'),
     '#description'   => t('You may wish to disable this feature if there are plenty of users, as it may slow down the entire site.'),
   );
+  $form['private_files_download_permission_debug_mode'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Enable debug mode'),
+    '#default_value' => variable_get('private_files_download_permission_debug_mode'),
+    '#description'   => t('Turn on logging to debug issues.'),
+  );
   // Prepare the submit button.
   $form['submit'] = array(
     '#type'  => 'submit',
@@ -535,6 +541,7 @@ function private_files_download_permission_get_preferences_form($form, &$form_st
 function private_files_download_permission_get_preferences_form_submit($form, &$form_state) {
   // Save preferences.
   variable_set('private_files_download_permission_by_user_checks', $form_state['values']['private_files_download_permission_by_user_checks']);
+  variable_set('private_files_download_permission_debug_mode', $form_state['values']['private_files_download_permission_debug_mode']);
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_get_directory_list');
   // Display message.
@@ -553,13 +560,19 @@ function private_files_download_permission_set_preferences() {
  */
 function private_files_download_permission_file_download($uri) {
   global $user;
+  //
+  $debug_mode = variable_get('private_files_download_permission_debug_mode', FALSE);
   // Check if user may bypass permission restrictions.
   if (user_access('bypass private files download permission')) {
-    watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+    if ($debug_mode) {
+      watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+    }
     return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
   }
   else if ((user_access('bypass private files download permission for temporary files')) && ('temporary://' === substr($uri, 0, 12))) {
-    watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+    if ($debug_mode) {
+      watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+    }
     return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
   }
   // If not, do all the specific checks.
@@ -593,26 +606,34 @@ function private_files_download_permission_file_download($uri) {
       if ($best_matching_directory->grant_file_owners) {
         $file_uid = db_query('SELECT f.uid FROM {file_managed} f WHERE f.uri = :uri', array(':uri' => $uri))->fetchField();
         if ($file_uid && ($file_uid == $user->uid)) {
-          watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+          if ($debug_mode) {
+            watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+          }
           return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
         }
       }
       // Evaluate user and role permissions and optionally allow access to $uri.
       if (variable_get('private_files_download_permission_by_user_checks')) {
         if (in_array($user->uid, array_keys($best_matching_directory->uid))) {
-          watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+          if ($debug_mode) {
+            watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+          }
           return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
         }
       }
       foreach ($user->roles as $rid => $role) {
         if (in_array($rid, array_keys($best_matching_directory->rid))) {
-          watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+          if ($debug_mode) {
+            watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+          }
           return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
         }
       }
     }
   }
   // By default, deny access.
-  watchdog('private_files_download_permission', 'User %user denied permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+  if ($debug_mode) {
+    watchdog('private_files_download_permission', 'User %user denied permission to download uri "%uri".', array( '%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
+  }
   return -1;
 }
