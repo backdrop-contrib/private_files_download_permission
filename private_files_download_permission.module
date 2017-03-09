@@ -85,16 +85,23 @@ function private_files_download_permission_menu() {
  * Returns a standard array containing all users.
  */
 function private_files_download_permission_get_users() {
-  // Load user list from database.
-  $user_list = db_select('users', 't')
-    ->fields('t')
-    ->orderBy('t.name', 'ASC')
-    ->execute()
-    ->fetchAllAssoc('uid');
-  // Return a standard (uid, name) array.
-  $users = array();
-  foreach ($user_list as $uid => $user) {
-    $users[$uid] = (!$user->name ? t('anonymous user') : $user->name);
+  // Load user list from cache (if enabled) or from database.
+  if (variable_get('private_files_download_permission_cache_users', FALSE) && ($cache = cache_get(__FUNCTION__))) {
+    $users = $cache->data;
+  } else {
+    // Get raw data.
+    $user_list = db_select('users', 't')
+      ->fields('t')
+      ->orderBy('t.name', 'ASC')
+      ->execute()
+      ->fetchAllAssoc('uid');
+    // Prepare a standard (uid, name) array.
+    $users = array();
+    foreach ($user_list as $uid => $user) {
+      $users[$uid] = (!$user->name ? t('anonymous user') : $user->name);
+    }
+    // Set cache values.
+    cache_set(__FUNCTION__, $users);
   }
   return $users;
 }
@@ -520,6 +527,17 @@ function private_files_download_permission_get_preferences_form($form, &$form_st
     '#default_value' => variable_get('private_files_download_permission_by_user_checks'),
     '#description'   => t('You may wish to disable this feature if there are plenty of users, as it may slow down the entire site.'),
   );
+  $form['private_files_download_permission_cache_users'] = array(
+    '#type'          => 'checkbox',
+    '#title'         => t('Cache user list'),
+    '#default_value' => variable_get('private_files_download_permission_cache_users'),
+    '#description'   => t('For sites with lots of users, this will save on load time when editing directory settings.'),
+    '#states'        => array(
+      'visible' => array(
+        ':input[name="private_files_download_permission_by_user_checks"]' => array( 'checked' => TRUE ),
+      )
+    )
+  );
   $form['private_files_download_permission_debug_mode'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Enable debug mode'),
@@ -541,6 +559,7 @@ function private_files_download_permission_get_preferences_form($form, &$form_st
 function private_files_download_permission_get_preferences_form_submit($form, &$form_state) {
   // Save preferences.
   variable_set('private_files_download_permission_by_user_checks', $form_state['values']['private_files_download_permission_by_user_checks']);
+  variable_set('private_files_download_permission_cache_users', $form_state['values']['private_files_download_permission_cache_users']);
   variable_set('private_files_download_permission_debug_mode', $form_state['values']['private_files_download_permission_debug_mode']);
   // Purge directory list from cache.
   drupal_static_reset('private_files_download_permission_get_directory_list');
