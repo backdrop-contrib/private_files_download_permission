@@ -534,9 +534,12 @@ function private_files_download_permission_get_preferences_form($form, &$form_st
     '#description'   => t('For sites with lots of users, this will save on load time when editing directory settings.'),
     '#states'        => array(
       'visible' => array(
-        ':input[name="private_files_download_permission_by_user_checks"]' => array( 'checked' => TRUE ),
-      )
-    )
+        ':input[name="by_user_checks"]' => array( 'checked' => TRUE ),
+      ),
+      'enabled' => array(
+        ':input[name="by_user_checks"]' => array( 'checked' => TRUE ),
+      ),
+    ),
   );
   $form['private_files_download_permission_debug_mode'] = array(
     '#type'          => 'checkbox',
