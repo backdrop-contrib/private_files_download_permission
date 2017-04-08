@@ -597,10 +597,16 @@ function private_files_download_permission_download_headers($uri) {
   $attachment_mode = variable_get('private_files_download_permission_attachment_mode', FALSE);
   //
   if ($attachment_mode) {
-    return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri));
+    return array(
+      'Content-Type' => file_get_mimetype($uri),
+      'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri),
+    );
   }
   else {
-    return array('Content-Type' => file_get_mimetype($uri), 'Content-Disposition' => 'inline');
+    return array(
+      'Content-Type' => file_get_mimetype($uri),
+      'Content-Disposition' => 'inline',
+    );
   }
 }
 
