@@ -1,0 +1,8 @@
+{
+    "_config_name": "private_files_download_permission.settings",
+    "by_user_checks": false,
+    "cache_users": false,
+    "attachment_mode": false,
+    "debug_mode": false,
+    "directories": []
+}

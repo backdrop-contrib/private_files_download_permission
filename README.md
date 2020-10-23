@@ -1,24 +1,17 @@
 Private files download permission
 =================================
 
-DESCRIPTION
-----------------------------
+Provides a simple permission to allow downloading of private files per-directory
+by-user and by-role filter.
 
-Version 1.x provided "two useful features which Drupal itself is missing: a
-simple permission to allow downloading of private files by role, plus the
-ability to combine both public and private downloads".
+Installation
+------------
 
-Version 2.x removes the "global" permission and implements a per-directory
-by-user and by-role filter instead, to let the administrator better tweak the
-whole website and increment the overall security.
+- Install this module using the official Backdrop CMS instructions at
+  <https://backdropcms.org/guide/modules>
 
-Idea and code (mostly for version 1.x) were inspired by
-http://www.beacon9.ca/labs/drupal-7-private-files-module.
-The 2.x development was partly sponsored by Cooperativa Italiana Artisti
-(http://www.cita.coop).
-
-INSTALLATION / CONFIGURATION
-----------------------------
+Configuration
+-------------
 
 Browse to Configuration > Media > Private files download permission (url:
 /admin/config/media/private-files-download-permission). Then add or edit each
@@ -43,3 +36,31 @@ Additional settings are available to cache users and/or log activities.
 
 Also configure which users and roles have access to the module configuration
 under People > Permissions (url: /admin/people/permissions).
+
+Issues
+------
+
+Bugs and Feature requests should be reported in the Issue Queue:
+<https://github.com/backdrop-contrib/webform_layout/issues>
+
+Current Maintainers
+-------------------
+
+- Herb v/d Dool <https://github.com/herbdool>
+
+Credits
+-------
+
+- Ported to Backdrop by Herb v/d Dool <https://github.com/herbdool>
+- Originally developed for Drupal by zanonmark <https://www.drupal.org/u/zanonmark>.
+
+Idea and code were inspired by <http://www.beacon9.ca/labs/drupal-7-private-files-module>.
+Partly sponsored by Cooperativa Italiana Artisti <http://www.cita.coop>.
+
+License
+-------
+
+This project is GPL v2 software. See the LICENSE.txt file in this directory for
+complete text.
+Credit
+------

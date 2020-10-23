@@ -4,9 +4,6 @@
  * @file
  * Installs, updates and uninstalls module variables and settings.
  *
- * Copyright (c) 2011-2017 by Marco Zanon (http://www.marcozanon.com)
- * Released under GPLv2 license
- * Idea and code inspired by http://www.beacon9.ca/labs/drupal-7-private-files-module
  */
 
 /**
@@ -14,21 +11,6 @@
  */
 function private_files_download_permission_schema() {
   return array(
-    'private_files_download_permission_directory' => array(
-      'description'  => 'Directories whose permissions are set.',
-      'fields'       => array(
-        'did'               => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-        'path'              => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
-        'bypass'            => array('type' => 'int', 'size' => 'tiny', 'not null' => TRUE),
-        'grant_file_owners' => array('type' => 'int', 'size' => 'tiny', 'not null' => TRUE),
-      ),
-      'primary key'  => array('did'),
-      'foreign keys' => array(),
-      'unique keys'  => array(
-        'path' => array('path'),
-      ),
-      'indexes'      => array(),
-    ),
     'private_files_download_permission_directory_user' => array(
       'description'  => 'Users having per-directory download permission.',
       'fields'       => array(
@@ -45,27 +27,6 @@ function private_files_download_permission_schema() {
         'private_files_download_permission_directory_user' => array(
           'table'   => 'users',
           'columns' => array('uid' => 'uid'),
-        ),
-      ),
-      'unique keys'  => array(),
-      'indexes'      => array(),
-    ),
-    'private_files_download_permission_directory_role' => array(
-      'description'  => 'Roles having per-directory download permission.',
-      'fields'       => array(
-        'drid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-        'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-        'rid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-      ),
-      'primary key'  => array('drid'),
-      'foreign keys' => array(
-        'private_files_download_permission_directory' => array(
-          'table'   => 'private_files_download_permission_directory',
-          'columns' => array('did' => 'did'),
-        ),
-        'private_files_download_permission_directory_role' => array(
-          'table'   => 'role',
-          'columns' => array('rid' => 'rid'),
         ),
       ),
       'unique keys'  => array(),
@@ -91,171 +52,21 @@ function private_files_download_permission_install() {
       FOREIGN KEY (uid) REFERENCES {users} (uid)
       ON DELETE CASCADE
       ON UPDATE CASCADE');
-    db_query('ALTER TABLE {private_files_download_permission_directory_role}
-      ADD CONSTRAINT {private_files_download_permission_directory}
-      FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
-      ON DELETE CASCADE
-      ON UPDATE CASCADE');
-    db_query('ALTER TABLE {private_files_download_permission_directory_role}
-      ADD CONSTRAINT {private_files_download_permission_directory_role}
-      FOREIGN KEY (rid) REFERENCES {role} (rid)
-      ON DELETE CASCADE
-      ON UPDATE CASCADE');
   }
   catch (Exception $e) {
     $transaction->rollback();
     $t = get_t();
-    drupal_set_message($t('An error occurred while installing the module. Please check the log for details.'), 'error');
-  }
-  // Set preferences' default values.
-  variable_set('private_files_download_permission_by_user_checks', TRUE);
-}
-
-/**
- * Remove useless settings from version 1.x, implement new schema and add
- * "real" foreign keys.
- */
-function private_files_download_permission_update_7200() {
-  $transaction = db_transaction();
-  try {
-    // Remove useless settings from version 1.x.
-    foreach (user_roles() as $rid => $role_name) {
-      user_role_revoke_permissions($rid, array(
-        'download private files',
-      ));
-    }
-    variable_del('private_files_download_permission_unprotected_subfolder');
-    // Implement new schema (rewritten from scratch, see https://drupal.org/node/150220).
-    $schema = array();
-    $schema['private_files_download_permission_directory'] = array(
-      'description'  => 'Directories whose permissions are set.',
-      'fields'       => array(
-        'did'  => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-        'path' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE),
-      ),
-      'primary key'  => array('did'),
-      'foreign keys' => array(),
-      'unique keys'  => array(
-        'path' => array('path'),
-      ),
-      'indexes'      => array(),
-    );
-    $schema['private_files_download_permission_directory_role'] = array(
-      'description'  => 'Roles having per-directory download permission.',
-      'fields'       => array(
-        'drid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-        'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-        'rid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-      ),
-      'primary key'  => array('drid'),
-      'foreign keys' => array(
-        'private_files_download_permission_directory' => array(
-          'table'   => 'private_files_download_permission_directory',
-          'columns' => array('did' => 'did'),
-        ),
-        'private_files_download_permission_directory_role' => array(
-          'table'   => 'role',
-          'columns' => array('rid' => 'rid'),
-        ),
-      ),
-      'unique keys'  => array(),
-      'indexes'      => array(),
-    );
-    db_create_table('private_files_download_permission_directory', $schema['private_files_download_permission_directory']);
-    db_create_table('private_files_download_permission_directory_role', $schema['private_files_download_permission_directory_role']);
-    // Add "real" foreign keys.
-    db_query('ALTER TABLE {private_files_download_permission_directory_role}
-      ADD CONSTRAINT {private_files_download_permission_directory}
-      FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
-      ON DELETE CASCADE
-      ON UPDATE CASCADE');
-    db_query('ALTER TABLE {private_files_download_permission_directory_role}
-      ADD CONSTRAINT {private_files_download_permission_directory_role}
-      FOREIGN KEY (rid) REFERENCES {role} (rid)
-      ON DELETE CASCADE
-      ON UPDATE CASCADE');
-  }
-  catch (Exception $e) {
-    $transaction->rollback();
-    $t = get_t();
-    drupal_set_message($t('An error occurred while updating the module. Please check the log for details.'), 'error');
+    backdrop_set_message($t('An error occurred while installing the module. Please check the log for details.'), 'error');
   }
 }
 
-/**
- * Prepare the database for by-user filtering.
- */
-function private_files_download_permission_update_7201() {
-  $transaction = db_transaction();
-  try {
-    // Implement new table schema (rewritten from scratch, see https://drupal.org/node/150220).
-    $schema = array();
-    $schema['private_files_download_permission_directory_user'] = array(
-      'description'  => 'Users having per-directory download permission.',
-      'fields'       => array(
-        'duid' => array('type' => 'serial', 'unsigned' => TRUE, 'not null' => TRUE),
-        'did'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-        'uid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
-      ),
-      'primary key'  => array('duid'),
-      'foreign keys' => array(
-        'private_files_download_permission_directory' => array(
-          'table'   => 'private_files_download_permission_directory',
-          'columns' => array('did' => 'did'),
-        ),
-        'private_files_download_permission_directory_user' => array(
-          'table'   => 'users',
-          'columns' => array('uid' => 'uid'),
-        ),
-      ),
-      'unique keys'  => array(),
-      'indexes'      => array(),
-    );
-    db_create_table('private_files_download_permission_directory_user', $schema['private_files_download_permission_directory_user']);
-    // Add "real" foreign keys.
-    db_query('ALTER TABLE {private_files_download_permission_directory_user}
-      ADD CONSTRAINT {private_files_download_permission_directory_2}
-      FOREIGN KEY (did) REFERENCES {private_files_download_permission_directory} (did)
-      ON DELETE CASCADE
-      ON UPDATE CASCADE');
-    db_query('ALTER TABLE {private_files_download_permission_directory_user}
-      ADD CONSTRAINT {private_files_download_permission_directory_user}
-      FOREIGN KEY (uid) REFERENCES {users} (uid)
-      ON DELETE CASCADE
-      ON UPDATE CASCADE');
-  }
-  catch (Exception $e) {
-    $transaction->rollback();
-    $t = get_t();
-    drupal_set_message($t('An error occurred while updating the module. Please check the log for details.'), 'error');
-  }
-}
-
-/**
- * Prepare the database to handle the "bypass" option. Set preferences' default
- * values.
- */
-function private_files_download_permission_update_7203() {
-  // Update table schema.
-  db_add_field('private_files_download_permission_directory', 'bypass', array('type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'initial' => 0));
-  // Set preferences' default values.
-  variable_set('private_files_download_permission_by_user_checks', TRUE);
-}
-
-/**
- * Prepare the database to handle the "grant_file_owners" option.
- */
-function private_files_download_permission_update_7204() {
-  // Update table schema.
-  db_add_field('private_files_download_permission_directory', 'grant_file_owners', array('type' => 'int', 'size' => 'tiny', 'not null' => TRUE, 'initial' => 0));
-}
 
 /**
  * Implements hook_enable().
  */
 function private_files_download_permission_enable() {
   // Purge directory list from cache.
-  drupal_static_reset('private_files_download_permission_directory_list');
+  backdrop_static_reset('private_files_download_permission_directory_list');
 }
 
 /**
@@ -264,36 +75,151 @@ function private_files_download_permission_enable() {
 function private_files_download_permission_uninstall() {
   $transaction = db_transaction();
   try {
-    if (FALSE !== stripos(db_driver(), 'mysql')) {
-      // Remove "real" foreign keys (MySQL database).
-      db_query('ALTER TABLE {private_files_download_permission_directory_user}
-        DROP FOREIGN KEY {private_files_download_permission_directory_2}');
-      db_query('ALTER TABLE {private_files_download_permission_directory_user}
-        DROP FOREIGN KEY {private_files_download_permission_directory_user}');
-      db_query('ALTER TABLE {private_files_download_permission_directory_role}
-        DROP FOREIGN KEY {private_files_download_permission_directory}');
-      db_query('ALTER TABLE {private_files_download_permission_directory_role}
-        DROP FOREIGN KEY {private_files_download_permission_directory_role}');
-    }
-    else {
-      // Remove "real" foreign keys (non-MySQL database).
-      db_query('ALTER TABLE {private_files_download_permission_directory_user}
-        DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_2}');
-      db_query('ALTER TABLE {private_files_download_permission_directory_user}
-        DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_user}');
-      db_query('ALTER TABLE {private_files_download_permission_directory_role}
-        DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory}');
-      db_query('ALTER TABLE {private_files_download_permission_directory_role}
-        DROP CONSTRAINT IF EXISTS {private_files_download_permission_directory_role}');
-    }
+    db_query('ALTER TABLE {private_files_download_permission_directory_user}
+      DROP FOREIGN KEY {private_files_download_permission_directory_2}');
+    db_query('ALTER TABLE {private_files_download_permission_directory_user}
+      DROP FOREIGN KEY {private_files_download_permission_directory_user}');
   }
   catch (Exception $e) {
     $transaction->rollback();
     $t = get_t();
-    drupal_set_message($t('An error occurred while removing the module. Please check the log for details.'), 'error');
+    backdrop_set_message($t('An error occurred while removing the module. Please check the log for details.'), 'error');
   }
-  // Remove preferences.
-  variable_del('private_files_download_permission_by_user_checks');
+
   // Purge directory list from cache.
-  drupal_static_reset('private_files_download_permission_directory_list');
+  backdrop_static_reset('private_files_download_permission_directory_list');
 }
+
+/**
+ * Implements hook_update_last_removed().
+ */
+function private_files_download_permission_update_last_removed() {
+  return 7204;
+}
+
+/**
+ * @defgroup updates-7.x-to-1.x Updates from 7.x to 1.x
+ * @{
+ * Update functions from Drupal 7.x to Backdrop CMS 1.x.
+ */
+
+/**
+ * Move private_files_download_permission settings from variables to config.
+ */
+
+function private_files_download_permission_update_1000() {
+  // Migrate variables to config.
+  $config = config('private_files_download_permission.settings');
+  $config->set('attachment_mode', update_variable_get('private_files_download_permission_attachment_mode', FALSE));
+  $config->set('by_user_checks', update_variable_get('private_files_download_permission_by_user_checks', FALSE));
+  $config->set('cache_users', update_variable_get('private_files_download_permission_cache_users', FALSE));
+  $config->set('debug_mode', update_variable_get('private_files_download_permission_debug_mode', FALSE));
+
+  $config->save();
+
+  // Delete variables.
+  update_variable_del('private_files_download_permission_attachment_mode');
+  update_variable_del('private_files_download_permission_by_user_checks');
+  update_variable_del('private_files_download_permission_cache_users');
+  update_variable_del('private_files_download_permission_debug_mode');
+
+}
+
+/**
+ * Move some private_files_download_permission configuration from table to config files.
+ */
+function private_files_download_permission_update_1001() {
+  if (db_table_exists('private_files_download_permission_directory')) {
+    $directories = db_select('private_files_download_permission_directory', 'd')
+    ->fields('d')
+    ->execute()
+    ->fetchAllAssoc('did');
+
+    foreach($directories as $directory) {
+      $config = config('private_files_download_permission.settings');
+      $config->set('directories.' . $directory->did, array(
+        'path' => $directory->path,
+        'bypass' => $directory->bypass,
+        'grant_file_owners' => $directory->grant_file_owners,
+      ));
+      $config->save();
+    }
+    db_drop_table('private_files_download_permission_directory');
+  }
+
+  if (db_table_exists('private_files_download_permission_directory_role')) {
+    $directory_roles = db_select('private_files_download_permission_directory_role', 'dr')
+    ->fields('dr')
+    ->execute()
+    ->fetchAllAssoc('drid');
+
+    foreach($directory_roles as $role) {
+      $config = config('private_files_download_permission.settings');
+      if ($role->rid == 1) {
+        $role->rid = 'anonymous';
+      } elseif ($role->rid == 2) {
+        $role->rid = 'authenticated';
+      }
+      $roles[$role->did][] = $role->rid;
+    }
+    $config->set('directories.' . $role->did . '.roles', $roles);
+    $config->save();
+    db_drop_table('private_files_download_permission_directory_role');
+  }
+
+  // Drop all foreign keys
+}
+
+/**
+ * Remove foreign keys on the private_files_download_permission_directory_user table.
+ */
+function private_files_download_permission_update_1002() {
+  // if user table exists
+  db_query('ALTER TABLE {private_files_download_permission_directory_user}
+    DROP FOREIGN KEY {private_files_download_permission_directory_2}');
+  db_query('ALTER TABLE {private_files_download_permission_directory_user}
+    DROP FOREIGN KEY {private_files_download_permission_directory_user}');
+}
+
+/**
+ * Update table columns.
+ */
+// function private_files_download_permission_update_1001() {
+//   // Update role ID to be a varchar instead of an integer.
+//   if (db_field_exists('simple_access_roles', 'rid')) {
+//     db_drop_primary_key('simple_access_roles');
+//     db_drop_index('simple_access_roles', 'rid');
+//     $role_column = array(
+//       'type' => 'varchar',
+//       'length' => 20,
+//       'description' => 'The role name.',
+//       'not null' => TRUE,
+//       'default' => '',
+//     );
+//     db_change_field('simple_access_roles', 'rid', 'role', $role_column);
+
+//     db_add_primary_key('simple_access_roles', array('gid', 'role'));
+//     db_add_index('simple_access_roles', 'role', array('role'));
+//   }
+
+//   $roles = array(
+//     '1' => 'anonymous',
+//     '2' => 'authenticated',
+//   );
+//   foreach ($roles as $rid => $name) {
+//     // Update the simple_access_roles table to match the new role names.
+//     db_update('simple_access_roles')
+//       ->fields(array(
+//         'role' => $name,
+//       ))
+//       ->condition('role', $rid)
+//       ->execute();
+//   }
+
+//   db_drop_field('simple_access_roles', 'rid');
+// }
+
+/*
+ * @} End of "defgroup updates-7.x-to-1.x"
+ * The next series of updates should start at 2000.
+ */

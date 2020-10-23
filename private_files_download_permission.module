@@ -3,11 +3,18 @@
 /**
  * @file
  * Handles both module settings and its behaviour.
- *
- * Copyright (c) 2011-2017 by Marco Zanon (http://www.marcozanon.com)
- * Released under GPLv2 license
- * Idea and code inspired by http://www.beacon9.ca/labs/drupal-7-private-files-module.
  */
+
+ /**
+ * Implements hook_config_info().
+ */
+function private_files_download_permission_config_info() {
+  $prefixes['private_files_download_permission.settings'] = array(
+    'label' => t('Private Files Download Permission'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
 
 /**
  * Implements hook_permission().
@@ -66,7 +73,7 @@ function private_files_download_permission_menu() {
     'admin/config/media/private-files-download-permission/%/remove' => array(
       'title'            => 'Remove directory',
       'description'      => 'Remove directory from the control list.',
-      'page callback'    => 'drupal_get_form',
+      'page callback'    => 'backdrop_get_form',
       'page arguments'   => array('private_files_download_permission_remove_directory', 4),
       'access arguments' => array('administer private files download permission'),
       'type'             => MENU_CALLBACK,
@@ -86,7 +93,7 @@ function private_files_download_permission_menu() {
  */
 function private_files_download_permission_get_users() {
   // Load user list from cache (if enabled) or from database.
-  if (variable_get('private_files_download_permission_cache_users', FALSE) && ($cache = cache_get(__FUNCTION__))) {
+  if (config_get('private_files_download_permission.settings', 'cache_users') && ($cache = cache_get(__FUNCTION__))) {
     $users = $cache->data;
   }
   else {
@@ -111,27 +118,17 @@ function private_files_download_permission_get_users() {
  * Returns the list of all directories under control.
  */
 function private_files_download_permission_get_directory_list() {
-  $directory_list = &drupal_static('private_files_download_permission_directory_list');
+  $directory_list = &backdrop_static('private_files_download_permission_directory_list');
   if (!isset($directory_list)) {
+    $config = config('private_files_download_permission.settings');
     // Load directory list.
-    $directory_list = db_select('private_files_download_permission_directory', 't')
-      ->fields('t')
-      ->orderBy('t.path', 'ASC')
-      ->execute()
-      ->fetchAllAssoc('did');
+    $directory_list = $config->get('directories');
     // Add user id and role id arrays to each directory.
-    foreach ($directory_list as $directory) {
-      $directory->uid = array();
-      $directory->rid = array();
+    foreach ($directory_list as $key => $directory) {
+      $directory_list[$key]['uid'] = array();
     }
     // Load directory user list.
     $directory_users = db_select('private_files_download_permission_directory_user', 't')
-      ->fields('t')
-      ->orderBy('t.did', 'ASC')
-      ->execute()
-      ->fetchAll();
-    // Load directory role list.
-    $directory_roles = db_select('private_files_download_permission_directory_role', 't')
       ->fields('t')
       ->orderBy('t.did', 'ASC')
       ->execute()
@@ -140,12 +137,7 @@ function private_files_download_permission_get_directory_list() {
     foreach ($directory_users as $directory_user) {
       $did = $directory_user->did;
       $uid = $directory_user->uid;
-      $directory_list[$did]->uid[$uid] = array('uid' => $uid);
-    }
-    foreach ($directory_roles as $directory_role) {
-      $did = $directory_role->did;
-      $rid = $directory_role->rid;
-      $directory_list[$did]->rid[$rid] = array('rid' => $rid);
+      $directory_list[$did]['uid'][$uid] = array('uid' => $uid);
     }
   }
   return $directory_list;
@@ -155,13 +147,14 @@ function private_files_download_permission_get_directory_list() {
  * (Page callback.) Displays the main page and lists directories under control.
  */
 function private_files_download_permission_list_directories() {
+  $config = config('private_files_download_permission.settings');
   $output = '';
   // Check if file system download method is set to private.
   if ('private' !== file_default_scheme()) {
-    drupal_set_message(t('Your !default_download_method is not set as private. Please keep in mind that these settings only affect private file system downloads.', array('!default_download_method' => l(t('default download method'), 'admin/config/media/file-system'))), 'warning');
+    backdrop_set_message(t('Your !default_download_method is not set as private. Please keep in mind that these settings only affect private file system downloads.', array('!default_download_method' => l(t('default download method'), 'admin/config/media/file-system'))), 'warning');
   }
   // Display the private file system path.
-  $private_path = variable_get('file_private_path');
+  $private_path = config_get('system.core', 'file_private_path');
   if (!$private_path) {
     $output .= '<p>' . t('Your private file system path is not set.') . '</p>';
   }
@@ -169,33 +162,33 @@ function private_files_download_permission_list_directories() {
     $output .= '<p>' . t('Your private file system path is %path.', array('%path' => $private_path)) . '</p>';
   }
   // Display a warning if by-user checks are not enabled.
-  if (!variable_get('private_files_download_permission_by_user_checks')) {
+  if (!$config->get('by_user_checks')) {
     $output .= '<p>' . t('!by_user_checks are not enabled.', array('!by_user_checks' => l(t('By-user checks'), 'admin/config/media/private-files-download-permission/preferences'))) . '</p>';
   }
   // Retrieve directory list and display it as a table.
   $directory_list = private_files_download_permission_get_directory_list();
-  if (variable_get('private_files_download_permission_by_user_checks')) {
+  if ($config->get('by_user_checks')) {
     $users = private_files_download_permission_get_users();
   }
   $roles = user_roles();
   $rows = array();
-  foreach ($directory_list as $directory) {
+  foreach ($directory_list as $key => $directory) {
     // Prepare the 'Enabled users' cell.
-    if (variable_get('private_files_download_permission_by_user_checks')) {
-      $enabled_users = array_intersect_key($users, $directory->uid);
+    if ($config->get('by_user_checks')) {
+      $enabled_users = array_intersect_key($users, $directory['uid']);
       natcasesort($enabled_users);
     }
     // Prepare the 'Enabled roles' cell.
-    $enabled_roles = array_intersect_key($roles, $directory->rid);
+    $enabled_roles = array_intersect_key($roles, array_flip($directory['roles']));
     natcasesort($enabled_roles);
     // Fill table row.
     $rows[] = array(
-      $directory->path,
-      $directory->bypass ? t('Yes') : '',
-      ($directory->grant_file_owners ? t('File owners') . '<br />' : '') . (variable_get('private_files_download_permission_by_user_checks') && !empty($enabled_users) && !$directory->bypass ? implode('<br />', $enabled_users) : ''),
-      !empty($enabled_roles) && !$directory->bypass ? implode('<br />', $enabled_roles) : '',
-      l(t('Edit'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/edit/'),
-      l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $directory->did . '/remove/'),
+      $directory['path'],
+      $directory['bypass'] ? t('Yes') : '',
+      ($directory['grant_file_owners'] ? t('File owners') . '<br />' : '') . ($config->get('by_user_checks') && !empty($enabled_users) && !$directory['bypass'] ? implode('<br />', $enabled_users) : ''),
+      !empty($enabled_roles) && !$directory['bypass'] ? implode('<br />', $enabled_roles) : '',
+      l(t('Edit'), 'admin/config/media/private-files-download-permission/' . $key . '/edit/'),
+      l(t('Remove'), 'admin/config/media/private-files-download-permission/' . $key . '/remove/'),
     );
   }
   $output .= theme('table', array(
@@ -224,12 +217,13 @@ function private_files_download_permission_list_directories() {
  * (Form callback.) Displays a form to add/edit a directory.
  */
 function private_files_download_permission_get_directory_form($form, &$form_state, $did) {
+  $config = config('private_files_download_permission.settings');
   $directory_list = private_files_download_permission_get_directory_list();
   $form = array();
   // Check that $did is actually a valid directory id, if not blank.
   if (NULL !== $did) {
     if (!in_array($did, array_keys($directory_list))) {
-      drupal_set_message(t('You need to provide a valid directory id.'), 'error');
+      backdrop_set_message(t('You need to provide a valid directory id.'), 'error');
       return;
     }
   }
@@ -237,18 +231,18 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   $default_path = NULL;
   $default_bypass = FALSE;
   $default_grant_file_owners = FALSE;
-  if (variable_get('private_files_download_permission_by_user_checks')) {
+  if ($config->get('by_user_checks')) {
     $default_users = array();
   }
   $default_roles = array();
   if (NULL !== $did) {
-    $default_path = $directory_list[$did]->path;
-    $default_bypass = $directory_list[$did]->bypass;
-    $default_grant_file_owners = $directory_list[$did]->grant_file_owners;
-    if (variable_get('private_files_download_permission_by_user_checks')) {
-      $default_users = array_keys($directory_list[$did]->uid);
+    $default_path = $directory_list[$did]['path'];
+    $default_bypass = $directory_list[$did]['bypass'];
+    $default_grant_file_owners = $directory_list[$did]['grant_file_owners'];
+    if ($config->get('by_user_checks')) {
+      $default_users = array_keys($directory_list[$did]['uid']);
     }
-    $default_roles = array_keys($directory_list[$did]->rid);
+    $default_roles = $directory_list[$did]['roles'];
   }
   // Prepare the directory id value to be eventually submitted.
   $form['did'] = array(
@@ -259,7 +253,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
   $form['path'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Path'),
-    '#field_prefix'  => variable_get('file_private_path'),
+    '#field_prefix'  => config_get('system.core', 'file_private_path'),
     '#size'          => 60,
     '#maxlength'     => 255,
     '#required'      => TRUE,
@@ -280,7 +274,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#description'   => t('Grant access to users who uploaded the files (i.e.: the file owners).'),
   );
   // Prepare the user checkbox fieldset.
-  if (variable_get('private_files_download_permission_by_user_checks')) {
+  if ($config->get('by_user_checks')) {
     $form['users'] = array(
       '#type'        => 'fieldset',
       '#title'       => t('Enabled users'),
@@ -289,7 +283,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     );
   }
   // Prepare user checkboxes.
-  if (variable_get('private_files_download_permission_by_user_checks')) {
+  if ($config->get('by_user_checks')) {
     $users = array_flip(private_files_download_permission_get_users());
     ksort($users, SORT_NATURAL | SORT_FLAG_CASE);
     $users = array_flip($users);
@@ -309,9 +303,7 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     '#collapsed'   => TRUE,
   );
   // Prepare role checkboxes.
-  $roles = array_flip(user_roles());
-  ksort($roles, SORT_NATURAL | SORT_FLAG_CASE);
-  $roles = array_flip($roles);
+  $roles = user_roles();
   foreach ($roles as $rid => $role) {
     $form['roles']['role_' . $rid] = array(
       '#type'          => 'checkbox',
@@ -335,14 +327,14 @@ function private_files_download_permission_get_directory_form_validate($form, &$
   // Retrieve $path (which, being required, is surely not blank).
   $path = $form_state['values']['path'];
   // Perform slash validation:
-  if (0 < drupal_strlen($path)) {
-    $first_character = drupal_substr($path, 0, 1);
-    $last_character = drupal_substr($path, -1, 1);
+  if (0 < backdrop_strlen($path)) {
+    $first_character = backdrop_substr($path, 0, 1);
+    $last_character = backdrop_substr($path, -1, 1);
     // ...there must be a leading slash.
     if (('/' !== $first_character) && ('\\' !== $first_character)) {
       form_set_error('path', t('You must add a leading slash.'));
     }
-    if (1 < drupal_strlen($path)) {
+    if (1 < backdrop_strlen($path)) {
       // ...there cannot be multiple consecutive slashes.
       if ((FALSE !== strpos($path, '//')) || (FALSE !== strpos($path, '\\\\'))) {
         form_set_error('path', t('You cannot use multiple consecutive slashes.'));
@@ -359,27 +351,33 @@ function private_files_download_permission_get_directory_form_validate($form, &$
  * (Form callback.) Submits the directory form.
  */
 function private_files_download_permission_get_directory_form_submit($form, &$form_state) {
+  $config = config('private_files_download_permission.settings');
   $transaction = db_transaction();
   try {
     // Retrieve form values.
     $did = $form_state['values']['did'];
+    if (!$did) {
+      $directories = array();
+      $directories = $config->get('directories');
+      $did = max(array_keys($directories)) + 1;
+    }
     $path = $form_state['values']['path'];
     $bypass = $form_state['values']['bypass'];
     $grant_file_owners = $form_state['values']['grant_file_owners'];
-    if (variable_get('private_files_download_permission_by_user_checks')) {
+    if ($config->get('by_user_checks')) {
       $users = array();
     }
     $roles = array();
     foreach ($form_state['values'] as $key => $value) {
-      if (variable_get('private_files_download_permission_by_user_checks')) {
+      if ($config->get('by_user_checks')) {
         if (0 === strpos($key, 'user_')) {
-          $uid = drupal_substr($key, drupal_strlen('user_'));
+          $uid = backdrop_substr($key, backdrop_strlen('user_'));
           $users[$uid] = $value;
         }
       }
-      if (0 === strpos($key, 'role_')) {
-        $rid = drupal_substr($key, drupal_strlen('role_'));
-        $roles[$rid] = $value;
+      if (0 === strpos($key, 'role_') && $value == 1) {
+        $role_key = backdrop_substr($key, backdrop_strlen('role_'));
+        $roles[] = $role_key;
       }
     }
     // Write directory record.
@@ -388,19 +386,17 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
       'path'   => $path,
       'bypass' => $bypass,
       'grant_file_owners'  => $grant_file_owners,
+      'roles' => $roles,
     );
-    if (NULL === $did) {
-      drupal_write_record('private_files_download_permission_directory', $directory_record);
-    }
-    else {
-      drupal_write_record('private_files_download_permission_directory', $directory_record, array('did'));
-    }
+    $config->set('directories.' . $did, $directory_record);
+    $config->save();
+
     // Retrieve last record id.
     if (NULL === $did) {
       $did = $directory_record['did'];
     }
     // Delete old user permissions and write new ones.
-    if (variable_get('private_files_download_permission_by_user_checks')) {
+    if ($config->get('by_user_checks')) {
       db_delete('private_files_download_permission_directory_user')
         ->condition('did', $did)
         ->execute();
@@ -415,27 +411,13 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
         }
       }
     }
-    // Delete old role permissions and write new ones.
-    db_delete('private_files_download_permission_directory_role')
-      ->condition('did', $did)
-      ->execute();
-    foreach ($roles as $rid => $value) {
-      if (TRUE == $value) {
-        db_insert('private_files_download_permission_directory_role')
-          ->fields(array(
-            'did' => $did,
-            'rid' => $rid,
-          ))
-          ->execute();
-      }
-    }
   }
   catch (Exception $e) {
     $transaction->rollback();
-    drupal_set_message(t('An error occurred while saving directory to the control list. Possible duplication? Please check the log for details.'), 'error');
+    backdrop_set_message(t('An error occurred while saving directory to the control list. Possible duplication? Please check the log for details.'), 'error');
   }
   // Purge directory list from cache.
-  drupal_static_reset('private_files_download_permission_get_directory_list');
+  backdrop_static_reset('private_files_download_permission_get_directory_list');
   // Set form redirection.
   $form_state['redirect'] = 'admin/config/media/private-files-download-permission';
 }
@@ -444,14 +426,14 @@ function private_files_download_permission_get_directory_form_submit($form, &$fo
  * (Page callback.) Adds a directory to the control list.
  */
 function private_files_download_permission_add_directory() {
-  return drupal_get_form('private_files_download_permission_get_directory_form', NULL);
+  return backdrop_get_form('private_files_download_permission_get_directory_form', NULL);
 }
 
 /**
  * (Page callback.) Edits a directory in the control list.
  */
 function private_files_download_permission_edit_directory($did) {
-  return drupal_get_form('private_files_download_permission_get_directory_form', $did);
+  return backdrop_get_form('private_files_download_permission_get_directory_form', $did);
 }
 
 /**
@@ -463,7 +445,7 @@ function private_files_download_permission_remove_directory($form, &$form_state,
   // Check that $did is actually a valid directory id.
   $directory_list = private_files_download_permission_get_directory_list();
   if (!in_array($did, array_keys($directory_list))) {
-    drupal_set_message(t('You need to provide a valid directory id.'), 'error');
+    backdrop_set_message(t('You need to provide a valid directory id.'), 'error');
     return;
   }
   // Prepare the directory id value to be eventually submitted.
@@ -474,7 +456,7 @@ function private_files_download_permission_remove_directory($form, &$form_state,
   // Display the confirmation form.
   return confirm_form(
     $form,
-    t('Are you sure you want to remove @path from the control list?', array('@path' => $directory_list[$did]->path)),
+    t('Are you sure you want to remove @path from the control list?', array('@path' => $directory_list[$did]['path'])),
     'admin/config/media/private-files-download-permission',
     t('This action cannot be undone.'),
     t('Remove directory from the control list'),
@@ -491,28 +473,23 @@ function private_files_download_permission_remove_directory_submit($form, &$form
     // Check that $form_state['values']['did'] is actually a valid directory id.
     $directory_list = private_files_download_permission_get_directory_list();
     if (!in_array($form_state['values']['did'], array_keys($directory_list))) {
-      drupal_set_message(t('You need to provide a valid directory id.'), 'error');
+      backdrop_set_message(t('You need to provide a valid directory id.'), 'error');
       return;
     }
     // Remove users associated to the directory.
     db_delete('private_files_download_permission_directory_user')
       ->condition('did', $form_state['values']['did'])
       ->execute();
-    // Remove roles associated to the directory.
-    db_delete('private_files_download_permission_directory_role')
-      ->condition('did', $form_state['values']['did'])
-      ->execute();
-    // Remove the directory itself.
-    db_delete('private_files_download_permission_directory')
-      ->condition('did', $form_state['values']['did'])
-      ->execute();
+
+    // Remove directory.
+    config_clear('private_files_download_permission.settings', 'directories.' . $form_state['values']['did']);
   }
   catch (Exception $e) {
     $transaction->rollback();
-    drupal_set_message(t('An error occurred while removing directory from the control list. Please check the log for details.'), 'error');
+    backdrop_set_message(t('An error occurred while removing directory from the control list. Please check the log for details.'), 'error');
   }
   // Purge directory list from cache.
-  drupal_static_reset('private_files_download_permission_get_directory_list');
+  backdrop_static_reset('private_files_download_permission_get_directory_list');
   // Set form redirection.
   $form_state['redirect'] = 'admin/config/media/private-files-download-permission';
 }
@@ -522,16 +499,17 @@ function private_files_download_permission_remove_directory_submit($form, &$form
  */
 function private_files_download_permission_get_preferences_form($form, &$form_state) {
   // Prepare settings.
+  $config = config('private_files_download_permission.settings');
   $form['private_files_download_permission_by_user_checks'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Enable by-user checks'),
-    '#default_value' => variable_get('private_files_download_permission_by_user_checks'),
+    '#default_value' => $config->get('by_user_checks'),
     '#description'   => t('You may wish to disable this feature if there are plenty of users, as it may slow down the entire site.'),
   );
   $form['private_files_download_permission_cache_users'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Cache user list'),
-    '#default_value' => variable_get('private_files_download_permission_cache_users'),
+    '#default_value' => $config->get('cache_users'),
     '#description'   => t('For sites with lots of users, this will save on load time when editing directory settings.'),
     '#states'        => array(
       'visible' => array(
@@ -545,13 +523,13 @@ function private_files_download_permission_get_preferences_form($form, &$form_st
   $form['private_files_download_permission_attachment_mode'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Enable attachment mode'),
-    '#default_value' => variable_get('private_files_download_permission_attachment_mode'),
+    '#default_value' => $config->get('attachment_mode'),
     '#description'   => t('Have files downloaded as attachments instead of displayed inline in the browser.'),
   );
   $form['private_files_download_permission_debug_mode'] = array(
     '#type'          => 'checkbox',
     '#title'         => t('Enable debug mode'),
-    '#default_value' => variable_get('private_files_download_permission_debug_mode'),
+    '#default_value' => $config->get('debug_mode'),
     '#description'   => t('Turn on logging to debug issues.'),
   );
   // Prepare the submit button.
@@ -567,39 +545,42 @@ function private_files_download_permission_get_preferences_form($form, &$form_st
  * (Form callback.) Submits the preferences form.
  */
 function private_files_download_permission_get_preferences_form_submit($form, &$form_state) {
+  $config = config('private_files_download_permission.settings');
   // Save preferences.
-  variable_set('private_files_download_permission_by_user_checks', $form_state['values']['private_files_download_permission_by_user_checks']);
+  $config->set('by_user_checks', (bool) $form_state['values']['private_files_download_permission_by_user_checks']);
   if (!$form_state['values']['private_files_download_permission_by_user_checks']) {
-    variable_set('private_files_download_permission_cache_users', FALSE);
+    $config->set('cache_users', FALSE);
   }
   else {
-    variable_set('private_files_download_permission_cache_users', $form_state['values']['private_files_download_permission_cache_users']);
+    $config->set('cache_users', (bool) $form_state['values']['private_files_download_permission_cache_users']);
   }
-  variable_set('private_files_download_permission_attachment_mode', $form_state['values']['private_files_download_permission_attachment_mode']);
-  variable_set('private_files_download_permission_debug_mode', $form_state['values']['private_files_download_permission_debug_mode']);
+  $config->set('attachment_mode', (bool) $form_state['values']['private_files_download_permission_attachment_mode']);
+  $config->set('debug_mode', (bool) $form_state['values']['private_files_download_permission_debug_mode']);
+  $config->save();
+
   // Purge directory list from cache.
-  drupal_static_reset('private_files_download_permission_get_directory_list');
+  backdrop_static_reset('private_files_download_permission_get_directory_list');
   // Display message.
-  drupal_set_message(t('Your preferences have been successfully saved.'), 'status');
+  backdrop_set_message(t('Your preferences have been successfully saved.'), 'status');
 }
 
 /**
  * (Page callback.) Sets module preferences.
  */
 function private_files_download_permission_set_preferences() {
-  return drupal_get_form('private_files_download_permission_get_preferences_form');
+  return backdrop_get_form('private_files_download_permission_get_preferences_form');
 }
 
 /**
  * Returns a proper array to be used for downloads.
  */
 function private_files_download_permission_download_headers($uri) {
-  $attachment_mode = variable_get('private_files_download_permission_attachment_mode', FALSE);
+  $attachment_mode = config_get('private_files_download_permission.settings', 'attachment_mode', FALSE);
   //
   if ($attachment_mode) {
     return array(
       'Content-Type' => file_get_mimetype($uri),
-      'Content-Disposition' => 'attachment; filename=' . drupal_basename($uri),
+      'Content-Disposition' => 'attachment; filename=' . backdrop_basename($uri),
     );
   }
   else {
@@ -615,7 +596,8 @@ function private_files_download_permission_download_headers($uri) {
  */
 function private_files_download_permission_file_download($uri) {
   global $user;
-  $debug_mode = variable_get('private_files_download_permission_debug_mode', FALSE);
+  $config = config('private_files_download_permission.settings');
+  $debug_mode = $config->get('debug_mode');
   // Check if user may bypass permission restrictions.
   if (user_access('bypass private files download permission')) {
     if ($debug_mode) {
@@ -643,21 +625,21 @@ function private_files_download_permission_file_download($uri) {
     $best_matching_directory = NULL;
     foreach (private_files_download_permission_get_directory_list() as $directory) {
       // Search for the best matching substring.
-      $directory_path = $directory->path;
+      $directory_path = $directory['path'];
       if (0 === stripos($uri_path, $directory_path)) {
-        if (drupal_strlen($directory_path) > $best_matching_length) {
-          $best_matching_length = drupal_strlen($directory_path);
+        if (backdrop_strlen($directory_path) > $best_matching_length) {
+          $best_matching_length = backdrop_strlen($directory_path);
           $best_matching_directory = $directory;
         }
       }
     }
     if (NULL != $best_matching_directory) {
       // Check if this module should ignore the call.
-      if ($best_matching_directory->bypass) {
+      if ($best_matching_directory['bypass']) {
         return NULL;
       }
       // Check if the file owner is allowed to access $uri.
-      if ($best_matching_directory->grant_file_owners) {
+      if ($best_matching_directory['grant_file_owners']) {
         $file_uid = db_query('SELECT f.uid FROM {file_managed} f WHERE f.uri = :uri', array(':uri' => $uri))->fetchField();
         if ($file_uid && ($file_uid == $user->uid)) {
           if ($debug_mode) {
@@ -667,16 +649,16 @@ function private_files_download_permission_file_download($uri) {
         }
       }
       // Evaluate user and role permissions and optionally allow access to $uri.
-      if (variable_get('private_files_download_permission_by_user_checks')) {
-        if (in_array($user->uid, array_keys($best_matching_directory->uid))) {
+      if ($config->get('by_user_checks')) {
+        if (in_array($user->uid, array_keys($best_matching_directory['uid']))) {
           if ($debug_mode) {
             watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array('%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
           }
           return private_files_download_permission_download_headers($uri);
         }
       }
-      foreach ($user->roles as $rid => $role) {
-        if (in_array($rid, array_keys($best_matching_directory->rid))) {
+      foreach ($user->roles as $role) {
+        if (in_array($role, $best_matching_directory['roles'])) {
           if ($debug_mode) {
             watchdog('private_files_download_permission', 'User %user granted permission to download uri "%uri".', array('%user' => $user->uid . ' (' . (isset($user->name) ? $user->name : '-') . ')', '%uri' => $uri), WATCHDOG_INFO, NULL);
           }
