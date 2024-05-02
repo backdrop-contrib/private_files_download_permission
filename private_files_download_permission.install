@@ -19,16 +19,6 @@ function private_files_download_permission_schema() {
         'uid'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE),
       ),
       'primary key'  => array('duid'),
-      'foreign keys' => array(
-        'private_files_download_permission_directory' => array(
-          'table'   => 'private_files_download_permission_directory',
-          'columns' => array('did' => 'did'),
-        ),
-        'private_files_download_permission_directory_user' => array(
-          'table'   => 'users',
-          'columns' => array('uid' => 'uid'),
-        ),
-      ),
       'unique keys'  => array(),
       'indexes'      => array(),
     ),
@@ -129,6 +119,7 @@ function private_files_download_permission_update_1000() {
  * Move some private_files_download_permission configuration from table to config files.
  */
 function private_files_download_permission_update_1001() {
+  db_query('SET FOREIGN_KEY_CHECKS=0');
   if (db_table_exists('private_files_download_permission_directory')) {
     $directories = db_select('private_files_download_permission_directory', 'd')
     ->fields('d')
@@ -166,8 +157,7 @@ function private_files_download_permission_update_1001() {
     $config->save();
     db_drop_table('private_files_download_permission_directory_role');
   }
-
-  // Drop all foreign keys
+  db_query('SET FOREIGN_KEY_CHECKS=1');
 }
 
 /**
