@@ -66,6 +66,18 @@ function private_files_download_permission_update_last_removed() {
 }
 
 /**
+ * Implements hook_update_dependencies().
+ */
+function private_files_download_permission_update_dependencies() {
+  // Ensure this modules updates are run before user_update_1007().
+  $dependencies['user'][1007] = array(
+    'private_files_download_permission' => 1001,
+    'private_files_download_permission' => 1002,
+  );
+  return $dependencies;
+}
+
+/**
  * @defgroup updates-7.x-to-1.x Updates from 7.x to 1.x
  * @{
  * Update functions from Drupal 7.x to Backdrop CMS 1.x.
@@ -94,17 +106,55 @@ function private_files_download_permission_update_1000() {
 }
 
 /**
- * Move some private_files_download_permission configuration from table to config files.
+ * Move role configuration from database table to config. Delete table.
  */
 function private_files_download_permission_update_1001() {
-  db_query('SET FOREIGN_KEY_CHECKS=0');
-  if (db_table_exists('private_files_download_permission_directory')) {
-    $directories = db_select('private_files_download_permission_directory', 'd')
-    ->fields('d')
-    ->execute()
-    ->fetchAllAssoc('did');
+  if (db_table_exists('private_files_download_permission_directory_role')) {
 
-    foreach($directories as $directory) {
+    db_query("ALTER TABLE {private_files_download_permission_directory_role}
+      DROP FOREIGN KEY {private_files_download_permission_directory}");
+    db_query("ALTER TABLE {private_files_download_permission_directory_role}
+      DROP FOREIGN KEY {private_files_download_permission_directory_role}");
+
+    $directory_roles = db_select('private_files_download_permission_directory_role', 'dr')
+      ->fields('dr')
+      ->execute()
+      ->fetchAllAssoc('drid');
+
+    foreach ($directory_roles as $role) {
+      $config = config('private_files_download_permission.settings');
+      if ($role->rid == 1) {
+        $role->rid = 'anonymous';
+      }
+      elseif ($role->rid == 2) {
+        $role->rid = 'authenticated';
+      }
+      $roles[$role->did][] = $role->rid;
+    }
+    $config->set('directories.' . $role->did . '.roles', $roles);
+    $config->save();
+
+    db_drop_table('private_files_download_permission_directory_role');
+  }
+}
+
+/**
+ * Move user configuration from database table to config. Delete table.
+ */
+function private_files_download_permission_update_1002() {
+  if (db_table_exists('private_files_download_permission_directory')) {
+
+    db_query('ALTER TABLE {private_files_download_permission_directory_user}
+      DROP FOREIGN KEY {private_files_download_permission_directory_2}');
+    db_query('ALTER TABLE {private_files_download_permission_directory_user}
+      DROP FOREIGN KEY {private_files_download_permission_directory_user}');
+
+    $directories = db_select('private_files_download_permission_directory', 'd')
+      ->fields('d')
+      ->execute()
+      ->fetchAllAssoc('did');
+
+    foreach ($directories as $directory) {
       $config = config('private_files_download_permission.settings');
       $config->set('directories.' . $directory->did, array(
         'path' => $directory->path,
@@ -113,42 +163,9 @@ function private_files_download_permission_update_1001() {
       ));
       $config->save();
     }
+
     db_drop_table('private_files_download_permission_directory');
   }
-
-  if (db_table_exists('private_files_download_permission_directory_role')) {
-    $directory_roles = db_select('private_files_download_permission_directory_role', 'dr')
-    ->fields('dr')
-    ->execute()
-    ->fetchAllAssoc('drid');
-
-    foreach($directory_roles as $role) {
-      $config = config('private_files_download_permission.settings');
-      if ($role->rid == 1) {
-        $role->rid = 'anonymous';
-      } elseif ($role->rid == 2) {
-        $role->rid = 'authenticated';
-      }
-      $roles[$role->did][] = $role->rid;
-    }
-    $config->set('directories.' . $role->did . '.roles', $roles);
-    $config->save();
-    db_drop_table('private_files_download_permission_directory_role');
-  }
-  db_query('SET FOREIGN_KEY_CHECKS=1');
-}
-
-/**
- * Remove foreign keys on the private_files_download_permission_directory_user table.
- */
-function private_files_download_permission_update_1002() {
-  if (!db_table_exists('private_files_download_permission_directory_user')) {
-    return;
-  }
-  db_query('ALTER TABLE {private_files_download_permission_directory_user}
-    DROP FOREIGN KEY {private_files_download_permission_directory_2}');
-  db_query('ALTER TABLE {private_files_download_permission_directory_user}
-    DROP FOREIGN KEY {private_files_download_permission_directory_user}');
 }
 
 /*
