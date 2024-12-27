@@ -179,8 +179,11 @@ function private_files_download_permission_list_directories() {
       natcasesort($enabled_users);
     }
     // Prepare the 'Enabled roles' cell.
-    $enabled_roles = array_intersect_key($roles, array_flip($directory['roles']));
-    natcasesort($enabled_roles);
+    $enabled_roles = array();
+    if (isset($directory['roles'])) {
+      $enabled_roles = array_intersect_key($roles, array_flip($directory['roles']));
+      natcasesort($enabled_roles);
+    }
     // Fill table row.
     $rows[] = array(
       $directory['path'],
@@ -242,7 +245,9 @@ function private_files_download_permission_get_directory_form($form, &$form_stat
     if ($config->get('by_user_checks')) {
       $default_users = array_keys($directory_list[$did]['uid']);
     }
-    $default_roles = $directory_list[$did]['roles'];
+    if (isset($directory_list[$did]['roles'])) {
+      $default_roles = $directory_list[$did]['roles'];
+    }
   }
   // Prepare the directory id value to be eventually submitted.
   $form['did'] = array(
